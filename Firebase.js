@@ -12,7 +12,7 @@ import 'firebase/compat/database';
 const firebaseConfig = {
     apiKey: "AIzaSyBQrjAyNRNIHkTd6zlk5wr1wU-OcMIfZaI",
     authDomain: "sae-troc.firebaseapp.com",
-    databaseURL: "https://sae-troc-default-rtdb.europe-west1.firebasedatabase.app/",
+    databaseURL: "https://sae-troc-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "sae-troc",
     storageBucket: "sae-troc.firebasestorage.app",
     messagingSenderId: "972919169380",

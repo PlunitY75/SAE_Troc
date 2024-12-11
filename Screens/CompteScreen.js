@@ -1,9 +1,10 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, Button, TouchableOpacity } from "react-native";
-import { NavigationContainer } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 
 export default function CompteScreen() {
+    const navigation = useNavigation();
     return (
         <View style={styles.container}>
             <Text>Page du comppte</Text>
