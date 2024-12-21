@@ -32,7 +32,7 @@ export default function RegisterScreen() {
             await user.updateProfile({
                 displayName: name,
             });
-            navigation.navigate('CompteScreen');
+            
 
         } catch (error) {
             console.error(error);
