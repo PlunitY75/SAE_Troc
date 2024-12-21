@@ -2,7 +2,7 @@ import React from 'react';
 import { Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
 
 
@@ -11,6 +11,7 @@ import CompteScreen from './Screens/CompteScreen';
 import MessagerieScreen from './Screens/MessagerieScreen';
 import AjoutAnnonceScreen from './Screens/AjoutAnnonceScreen';
 import RegisterScreen from './Screens/Login/RegisterScreen';
+import LoginScreen from './Screens/Login/LoginScreen'
 
 
 const Stack = createStackNavigator();
@@ -26,6 +27,7 @@ export default function App() {
                 <Stack.Screen name="Messagerie" component={MessagerieScreen} options={{title: 'Messagerie'}}/>
                 <Stack.Screen name="AjoutAnnonce" component={AjoutAnnonceScreen} options={{title: 'Ajouter une annonce'}}/>
                 <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{title: 'Nouveau Compte'}}/>
+                <Stack.Screen name="LoginScreen" component={LoginScreen} options={{title: 'Connexion'}}/>
             </Stack.Navigator>
         </NavigationContainer>
     );
