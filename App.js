@@ -23,7 +23,7 @@ export default function App() {
             <Stack.Navigator screenOptions={{ headerShown: true }}>
                 <Stack.Screen name="Home" component={TabNav} options={{ title: 'Troc & Co' }}/>
                 <Stack.Screen name="Accueil" component={AccueilScreen} options={{ title: 'Accueil' }} />
-                <Stack.Screen name="Mon Compte" component={AccueilScreen} options={{title: 'Mon compte'}}/>
+                <Stack.Screen name="CompteScreen" component={AccueilScreen} options={{title: 'Mon compte'}}/>
                 <Stack.Screen name="Messagerie" component={MessagerieScreen} options={{title: 'Messagerie'}}/>
                 <Stack.Screen name="AjoutAnnonce" component={AjoutAnnonceScreen} options={{title: 'Ajouter une annonce'}}/>
                 <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{title: 'Nouveau Compte'}}/>

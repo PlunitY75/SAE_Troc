@@ -3,16 +3,27 @@ import { StyleSheet, Text, View, TouchableOpacity, TextInput } from "react-nativ
 import { useState } from "react";
 import { auth } from "../../Firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigation } from '@react-navigation/native';
 
 export default function LoginScreen() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    const navigation = useNavigation(); 
+
+    const registerRedirection = () => {
+        navigation.navigate('RegisterScreen');
+    };
+
+
     const handleLogin = async () => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            alert("Connexion réussie !");
+            alert("Connexion réussie !!!!");
             // Redirigez ou effectuez une action après la connexion
+            navigation.navigate('Home');
+            
+
         } catch (error) {
             console.error(error);
             alert("Erreur de connexion. Vérifiez vos identifiants.");
@@ -41,7 +52,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
             <Text style={styles.footerText}>
                 Vous n'avez pas encore de compte ?{" "}
-                <Text style={styles.link} onPress={() => alert("Redirection vers inscription")}>
+                <Text style={styles.link} onPress={() => registerRedirection}>
                     Inscrivez-vous
                 </Text>
             </Text>

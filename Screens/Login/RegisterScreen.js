@@ -1,39 +1,75 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TouchableOpacity, TextInput } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Image } from "react-native";
 import { useState } from "react";
 import { auth } from "../../Firebase";
 import { getDatabase, ref, set } from "firebase/database";
-import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from "expo-image-picker";
+import { useNavigation } from "@react-navigation/native";
 
-function enregistrementDesUtilisateurs(userId, name, email) {
+function enregistrementDesUtilisateurs(userId, name, email, adressePostal, photoBase64) {
     const db = getDatabase();
     set(ref(db, "users/" + userId), {
         name: name,
         email: email,
+        adressePostal: adressePostal,
+        photoBase64: photoBase64,
     });
+
+    // set(ref(db, "users/"+userId+"/imageBase64"), {
+    //     photoBase64: photoBase64,
+    // })
 }
 
 export default function RegisterScreen() {
     const [name, setName] = useState("");
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
+    const [adressePostal, setAdressePostal] = useState("");
+    const [photo, setPhoto] = useState(null);
+    const [photoBase64, setPhotoBase64] = useState(null);
+    const [uploading, setUploading] = useState(false);
 
-    const navigation = useNavigation();    
+    const navigation = useNavigation();
 
     const connexionRedirection = () => {
-        navigation.navigate('LoginScreen');
+        navigation.navigate("LoginScreen");
+    };
+
+    const pickImage = async () => {
+        // Demande d'autorisation d'accès à la galerie
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+            alert("Permission d'accéder à la galerie refusée !");
+            return;
+        }
+
+        // Ouvre la galerie pour sélectionner une image
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1], // Rendre l'image carrée
+            quality: 0, // Réduire la qualité à 50%
+            base64: true, // Encode directement en base64
+        });
+        
+
+        if (!result.canceled) {
+            setPhoto(result.assets[0].uri); // URI de l'image pour l'affichage
+            setPhotoBase64(result.assets[0].base64); // Base64 pour le stockage
+        }
     };
 
     const creationCompte = async () => {
         try {
+            // Création de l'utilisateur
             await auth.createUserWithEmailAndPassword(email, password);
             const user = auth.currentUser;
-            enregistrementDesUtilisateurs(user.uid, name, email);
-            await user.updateProfile({
-                displayName: name,
-            });
-            
 
+            // Enregistrement dans la base de données
+            enregistrementDesUtilisateurs(user.uid, name, email, adressePostal, photoBase64);
+
+            // Redirection après l'inscription
+            navigation.navigate("Home");
         } catch (error) {
             console.error(error);
             alert("Erreur lors de l'inscription. Veuillez réessayer.");
@@ -43,11 +79,27 @@ export default function RegisterScreen() {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Créer un compte</Text>
+
+            {/* Sélection et affichage de l'image */}
+            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+                {photo ? (
+                    <Image source={{ uri: photo }} style={styles.profileImage} />
+                ) : (
+                    <Text style={styles.imagePickerText}>Ajouter une photo de profil</Text>
+                )}
+            </TouchableOpacity>
+
             <TextInput
                 style={styles.input}
                 placeholder="Nom d'utilisateur"
                 value={name}
                 onChangeText={setName}
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Adresse Postal"
+                value={adressePostal}
+                onChangeText={setAdressePostal}
             />
             <TextInput
                 style={styles.input}
@@ -63,9 +115,12 @@ export default function RegisterScreen() {
                 onChangeText={setPassword}
                 secureTextEntry
             />
-            <TouchableOpacity style={styles.button} onPress={creationCompte}>
-                <Text style={styles.buttonText}>S'inscrire</Text>
+
+            {/* Bouton d'inscription */}
+            <TouchableOpacity style={styles.button} onPress={creationCompte} disabled={uploading}>
+                <Text style={styles.buttonText}>{uploading ? "Téléversement en cours..." : "S'inscrire"}</Text>
             </TouchableOpacity>
+
             <Text style={styles.footerText}>
                 Vous avez déjà un compte ?{" "}
                 <Text style={styles.link} onPress={connexionRedirection}>
@@ -102,6 +157,24 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         marginBottom: 15,
     },
+    imagePicker: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: "#ddd",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 20,
+        overflow: "hidden",
+    },
+    imagePickerText: {
+        fontSize: 14,
+        color: "#888",
+    },
+    profileImage: {
+        width: "100%",
+        height: "100%",
+    },
     button: {
         width: "100%",
         height: 50,
@@ -126,4 +199,3 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
 });
-
