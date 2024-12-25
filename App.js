@@ -12,6 +12,7 @@ import MessagerieScreen from './Screens/MessagerieScreen';
 import AjoutAnnonceScreen from './Screens/AjoutAnnonceScreen';
 import RegisterScreen from './Screens/Login/RegisterScreen';
 import LoginScreen from './Screens/Login/LoginScreen'
+import AnnonceModifScreen from './Screens/Reglages/AnnonceModifScreen';
 
 
 const Stack = createStackNavigator();
@@ -28,6 +29,7 @@ export default function App() {
                 <Stack.Screen name="AjoutAnnonce" component={AjoutAnnonceScreen} options={{title: 'Ajouter une annonce'}}/>
                 <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{title: 'Nouveau Compte'}}/>
                 <Stack.Screen name="LoginScreen" component={LoginScreen} options={{title: 'Connexion'}}/>
+                <Stack.Screen name="AnnonceModifScreen" component={AnnonceModifScreen} options={{title: 'Modifier votre annonce'}}/>
             </Stack.Navigator>
         </NavigationContainer>
     );

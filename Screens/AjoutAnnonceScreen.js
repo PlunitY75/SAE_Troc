@@ -14,6 +14,7 @@ export default function AjoutAnnonceScreen() {
 
     const ajouterPhoto = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        
         if (status !== "granted") {
             alert("Permission d'accéder à la galerie refusée !");
             return;
