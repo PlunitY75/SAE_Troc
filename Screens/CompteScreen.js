@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from "react";
 import { auth } from "../Firebase";
@@ -9,30 +9,51 @@ export default function CompteScreen() {
     const navigation = useNavigation();
     const [user, setUser] = useState(null);
     const [userData, setUserData] = useState(null); // Stocker les données utilisateur
+    const [annonces, setAnnonces] = useState([]); // Stocker les annonces utilisateur
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
             setUser(currentUser);
 
-            // Si un utilisateur est connecté, récupérer les données depuis la DB
             if (currentUser) {
                 fetchUserData(currentUser.uid);
+                fetchUserAnnonces(currentUser.uid);
             }
         });
 
         return unsubscribe;
     }, []);
 
+    // Récupérer les données utilisateur
     const fetchUserData = (userId) => {
         const db = getDatabase();
         const userRef = ref(db, `users/${userId}`);
-
+    
         // Écouter les changements dans la base de données
         onValue(userRef, (snapshot) => {
             if (snapshot.exists()) {
-                setUserData(snapshot.val());
+                const data = snapshot.val();
+                // Accéder à l'image Base64 dans le sous-objet
+                const photoBase64 = data.imageBase64?.photoBase64 || null;
+                setUserData({ ...data, photoBase64 });
             } else {
                 console.log("Aucune donnée utilisateur trouvée.");
+            }
+        });
+    };
+
+    // Récupérer les annonces de l'utilisateur
+    const fetchUserAnnonces = (userId) => {
+        const db = getDatabase();
+        const annoncesRef = ref(db, `annonces`);
+
+        onValue(annoncesRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const userAnnonces = Object.values(data).filter(annonce => annonce.userId === userId);
+                setAnnonces(userAnnonces);
+            } else {
+                setAnnonces([]);
             }
         });
     };
@@ -87,6 +108,24 @@ export default function CompteScreen() {
                     <Text style={styles.actionText}>Se déconnecter</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* Section Annonces */}
+            <Text style={styles.sectionTitle}>Mes annonces</Text>
+            <FlatList
+                data={annonces}
+                keyExtractor={(item, index) => index.toString()}
+                numColumns={2}
+                renderItem={({ item }) => (
+                    <View style={styles.annonceCard}>
+                        <Image
+                            source={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                            style={styles.annonceImage}
+                        />
+                        <Text style={styles.annonceTitle}>{item.objet}</Text>
+                        <Text style={styles.annoncePrice}>{item.prix}€/semaine</Text>
+                    </View>
+                )}
+            />
 
             <StatusBar style="auto" />
         </View>
@@ -169,5 +208,37 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "600",
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: "#343a40",
+        marginBottom: 10,
+        marginTop: 20,
+    },
+    annonceCard: {
+        flex: 1,
+        margin: 5,
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        padding: 10,
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#ccc",
+    },
+    annonceImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 8,
+    },
+    annonceTitle: {
+        fontSize: 14,
+        fontWeight: "bold",
+        color: "#333",
+        marginTop: 10,
+    },
+    annoncePrice: {
+        fontSize: 12,
+        color: "#666",
     },
 });

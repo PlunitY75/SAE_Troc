@@ -12,12 +12,12 @@ function enregistrementDesUtilisateurs(userId, name, email, adressePostal, photo
         name: name,
         email: email,
         adressePostal: adressePostal,
-        photoBase64: photoBase64,
+        
     });
 
-    // set(ref(db, "users/"+userId+"/imageBase64"), {
-    //     photoBase64: photoBase64,
-    // })
+    set(ref(db, "users/"+userId+"/imageBase64"), {
+        photoBase64: photoBase64,
+    })
 }
 
 export default function RegisterScreen() {
