@@ -8,8 +8,8 @@ import { getDatabase, ref, onValue } from "firebase/database";
 export default function CompteScreen() {
     const navigation = useNavigation();
     const [user, setUser] = useState(null);
-    const [userData, setUserData] = useState(null); // Stocker les données utilisateur
-    const [annonces, setAnnonces] = useState([]); // Stocker les annonces utilisateur
+    const [userData, setUserData] = useState(null);
+    const [annonces, setAnnonces] = useState([]);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
@@ -24,39 +24,41 @@ export default function CompteScreen() {
         return unsubscribe;
     }, []);
 
-    // Récupérer les données utilisateur
     const fetchUserData = (userId) => {
         const db = getDatabase();
         const userRef = ref(db, `users/${userId}`);
     
-        // Écouter les changements dans la base de données
         onValue(userRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                // Accéder à l'image Base64 dans le sous-objet
                 const photoBase64 = data.imageBase64?.photoBase64 || null;
                 setUserData({ ...data, photoBase64 });
-            } else {
-                console.log("Aucune donnée utilisateur trouvée.");
             }
         });
     };
 
-    // Récupérer les annonces de l'utilisateur
     const fetchUserAnnonces = (userId) => {
         const db = getDatabase();
         const annoncesRef = ref(db, `annonces`);
-
+    
         onValue(annoncesRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                const userAnnonces = Object.values(data).filter(annonce => annonce.userId === userId);
+                const userAnnonces = Object.keys(data)
+                    .filter((id) => data[id].userId === userId)
+                    .map((id) => ({ ...data[id], id })); // Ajoute l'ID de l'annonce
                 setAnnonces(userAnnonces);
             } else {
                 setAnnonces([]);
             }
         });
     };
+    
+
+    const handleAnnoncePress = (annonce) => {
+        navigation.navigate('AnnonceModifScreen', { annonce });
+    };
+    
 
     const handleLogout = () => {
         auth.signOut()
@@ -87,7 +89,6 @@ export default function CompteScreen() {
 
     return (
         <View style={styles.profileContainer}>
-            {/* Section Profil */}
             <View style={styles.profileHeader}>
                 <Image
                     source={{ uri: userData?.photoBase64 ? `data:image/png;base64,${userData.photoBase64}` : "https://via.placeholder.com/100" }}
@@ -99,7 +100,6 @@ export default function CompteScreen() {
                 </Text>
             </View>
 
-            {/* Section Actions */}
             <View style={styles.actionsContainer}>
                 <TouchableOpacity style={styles.actionButton}>
                     <Text style={styles.actionText}>Modifier le profil</Text>
@@ -109,23 +109,24 @@ export default function CompteScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* Section Annonces */}
             <Text style={styles.sectionTitle}>Mes annonces</Text>
             <FlatList
-                data={annonces}
-                keyExtractor={(item, index) => index.toString()}
-                numColumns={2}
-                renderItem={({ item }) => (
-                    <View style={styles.annonceCard}>
-                        <Image
-                            source={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                            style={styles.annonceImage}
-                        />
-                        <Text style={styles.annonceTitle}>{item.objet}</Text>
-                        <Text style={styles.annoncePrice}>{item.prix}€/semaine</Text>
-                    </View>
-                )}
-            />
+    data={annonces}
+    keyExtractor={(item) => item.id} // Utiliser l'ID comme clé
+    numColumns={2}
+    renderItem={({ item }) => (
+        <TouchableOpacity onPress={() => handleAnnoncePress(item)}>
+            <View style={styles.annonceCard}>
+                <Image
+                    source={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                    style={styles.annonceImage}
+                />
+                <Text style={styles.annonceTitle}>{item.objet}</Text>
+                <Text style={styles.annoncePrice}>{item.prix}€/semaine</Text>
+            </View>
+        </TouchableOpacity>
+    )}
+/>
 
             <StatusBar style="auto" />
         </View>

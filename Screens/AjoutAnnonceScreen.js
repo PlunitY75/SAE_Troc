@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image } from "react-native";
 import { useState } from "react";
+import { Picker } from "@react-native-picker/picker";
 import { auth } from "../Firebase";
 import { getDatabase, ref, push, set } from "firebase/database";
 import * as ImagePicker from "expo-image-picker";
@@ -10,10 +11,30 @@ export default function AjoutAnnonceScreen() {
     const [objet, setObjet] = useState("");
     const [description, setDescription] = useState("");
     const [prix, setPrix] = useState("");
+    const [categorie, setCategorie] = useState(""); // État pour la catégorie
     const [uploading, setUploading] = useState(false);
+
+    const categories = [
+        "Instruments de musique",
+        "Équipements électroniques",
+        "Meubles et décoration",
+        "Loisirs et sports",
+        "Livres, films et jeux vidéo",
+        "Vêtements et accessoires",
+        "Outils et bricolage",
+        "Équipements pour enfants",
+        "Véhicules et pièces détachées",
+        "Cuisine et électroménager",
+        "Jardinage et extérieur",
+        "Santé et bien-être",
+        "Art et artisanat",
+        "Animaux et accessoires",
+        "Autres",
+    ];
 
     const ajouterPhoto = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
         if (status !== "granted") {
             alert("Permission d'accéder à la galerie refusée !");
             return;
@@ -27,8 +48,7 @@ export default function AjoutAnnonceScreen() {
         });
 
         if (!result.canceled) {
-            // Ajouter la photo sélectionnée à la liste
-            const newPhotos = result.assets.map(asset => asset.base64);
+            const newPhotos = result.assets.map((asset) => asset.base64);
             setPhotos([...photos, ...newPhotos]);
         }
     };
@@ -39,8 +59,8 @@ export default function AjoutAnnonceScreen() {
             return;
         }
 
-        if (!objet || !description || !prix || photos.length === 0) {
-            alert("Veuillez remplir tous les champs et ajouter au moins une photo !");
+        if (!objet || !description || !prix || !categorie || photos.length === 0) {
+            alert("Veuillez remplir tous les champs, sélectionner une catégorie et ajouter au moins une photo !");
             return;
         }
 
@@ -50,7 +70,6 @@ export default function AjoutAnnonceScreen() {
             const db = getDatabase();
             const userId = auth.currentUser.uid;
 
-            // Ajouter l'annonce dans Firebase
             const newAnnonceRef = push(ref(db, "annonces"));
             await set(newAnnonceRef, {
                 userId,
@@ -58,15 +77,16 @@ export default function AjoutAnnonceScreen() {
                 objet,
                 description,
                 prix,
+                categorie, // Inclure la catégorie
                 dateAjout: new Date().toISOString(),
             });
-            
 
             alert("Annonce publiée avec succès !");
             setPhotos([]);
             setObjet("");
             setDescription("");
             setPrix("");
+            setCategorie("");
         } catch (error) {
             console.error("Erreur lors de la publication de l'annonce :", error);
             alert("Une erreur est survenue. Veuillez réessayer.");
@@ -116,6 +136,20 @@ export default function AjoutAnnonceScreen() {
                 onChangeText={setPrix}
                 keyboardType="numeric"
             />
+
+            {/* Menu déroulant pour sélectionner une catégorie */}
+            <Text style={styles.label}>Catégorie</Text>
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={categorie}
+                    onValueChange={(itemValue) => setCategorie(itemValue)}
+                >
+                    <Picker.Item label="-- Sélectionnez une catégorie --" value="" />
+                    {categories.map((cat, index) => (
+                        <Picker.Item key={index} label={cat} value={cat} />
+                    ))}
+                </Picker>
+            </View>
 
             {/* Bouton pour publier l'annonce */}
             <TouchableOpacity
@@ -189,6 +223,19 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 15,
         textAlignVertical: "top",
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: "bold",
+        marginBottom: 5,
+        alignSelf: "flex-start",
+    },
+    pickerContainer: {
+        width: "100%",
+        borderColor: "#ccc",
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 15,
     },
     publishButton: {
         backgroundColor: "#28A745",
