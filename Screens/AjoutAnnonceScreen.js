@@ -1,6 +1,15 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image } from "react-native";
+import {
+    StyleSheet,
+    Text,
+    View,
+    TextInput,
+    TouchableOpacity,
+    ScrollView,
+    Image,
+} from "react-native";
 import { useState } from "react";
+import { Picker } from "@react-native-picker/picker";
 import { auth } from "../Firebase";
 import { getDatabase, ref, push, set } from "firebase/database";
 import * as ImagePicker from "expo-image-picker";
@@ -10,11 +19,25 @@ export default function AjoutAnnonceScreen() {
     const [objet, setObjet] = useState("");
     const [description, setDescription] = useState("");
     const [prix, setPrix] = useState("");
+    const [categorie, setCategorie] = useState("");
     const [uploading, setUploading] = useState(false);
+
+    const categories = [
+        "Vêtements",
+        "Chaussures",
+        "Accessoires",
+        "Maison",
+        "Électronique",
+        "Sport & Loisir",
+        "Enfant",
+        "Livres",
+        "Divertissement",
+        "Autre",
+    ];
 
     const ajouterPhoto = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        
+
         if (status !== "granted") {
             alert("Permission d'accéder à la galerie refusée !");
             return;
@@ -28,8 +51,7 @@ export default function AjoutAnnonceScreen() {
         });
 
         if (!result.canceled) {
-            // Ajouter la photo sélectionnée à la liste
-            const newPhotos = result.assets.map(asset => asset.base64);
+            const newPhotos = result.assets.map((asset) => asset.base64);
             setPhotos([...photos, ...newPhotos]);
         }
     };
@@ -40,7 +62,7 @@ export default function AjoutAnnonceScreen() {
             return;
         }
 
-        if (!objet || !description || !prix || photos.length === 0) {
+        if (!objet || !description || !prix || !categorie || photos.length === 0) {
             alert("Veuillez remplir tous les champs et ajouter au moins une photo !");
             return;
         }
@@ -51,7 +73,6 @@ export default function AjoutAnnonceScreen() {
             const db = getDatabase();
             const userId = auth.currentUser.uid;
 
-            // Ajouter l'annonce dans Firebase
             const newAnnonceRef = push(ref(db, "annonces"));
             await set(newAnnonceRef, {
                 userId,
@@ -59,15 +80,16 @@ export default function AjoutAnnonceScreen() {
                 objet,
                 description,
                 prix,
+                categorie,
                 dateAjout: new Date().toISOString(),
             });
-            
 
             alert("Annonce publiée avec succès !");
             setPhotos([]);
             setObjet("");
             setDescription("");
             setPrix("");
+            setCategorie("");
         } catch (error) {
             console.error("Erreur lors de la publication de l'annonce :", error);
             alert("Une erreur est survenue. Veuillez réessayer.");
@@ -78,56 +100,67 @@ export default function AjoutAnnonceScreen() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Ajouter une annonce</Text>
+            <View style={styles.formContainer}>
+                <Text style={styles.title}>Ajouter une annonce</Text>
 
-            {/* Afficher les photos ajoutées */}
-            <ScrollView horizontal style={styles.photoContainer}>
-                {photos.map((photo, index) => (
-                    <Image
-                        key={index}
-                        source={{ uri: `data:image/png;base64,${photo}` }}
-                        style={styles.photo}
-                    />
-                ))}
-            </ScrollView>
+                <ScrollView horizontal style={styles.photoContainer}>
+                    {photos.map((photo, index) => (
+                        <Image
+                            key={index}
+                            source={{ uri: `data:image/png;base64,${photo}` }}
+                            style={styles.photo}
+                        />
+                    ))}
+                </ScrollView>
 
-            {/* Bouton pour ajouter des photos */}
-            <TouchableOpacity style={styles.addButton} onPress={ajouterPhoto}>
-                <Text style={styles.addButtonText}>Ajouter des photos</Text>
-            </TouchableOpacity>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Nom de l'objet"
+                    value={objet}
+                    onChangeText={setObjet}
+                />
+                <TextInput
+                    style={styles.textArea}
+                    placeholder="Description"
+                    value={description}
+                    onChangeText={setDescription}
+                    multiline
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Prix à la journée (€)"
+                    value={prix}
+                    onChangeText={setPrix}
+                    keyboardType="numeric"
+                />
 
-            {/* Champs de formulaire */}
-            <TextInput
-                style={styles.input}
-                placeholder="Nom de l'objet"
-                value={objet}
-                onChangeText={setObjet}
-            />
-            <TextInput
-                style={styles.textArea}
-                placeholder="Description"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Prix à la journée (€)"
-                value={prix}
-                onChangeText={setPrix}
-                keyboardType="numeric"
-            />
+                {/* Picker pour les catégories */}
+                <View style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={categorie}
+                        onValueChange={(value) => setCategorie(value)}
+                    >
+                        <Picker.Item label="Sélectionner une catégorie" value="" />
+                        {categories.map((cat, index) => (
+                            <Picker.Item key={index} label={cat} value={cat} />
+                        ))}
+                    </Picker>
+                </View>
 
-            {/* Bouton pour publier l'annonce */}
-            <TouchableOpacity
-                style={styles.publishButton}
-                onPress={publierAnnonce}
-                disabled={uploading}
-            >
-                <Text style={styles.publishButtonText}>
-                    {uploading ? "Publication en cours..." : "Publier l'annonce"}
-                </Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.addButton} onPress={ajouterPhoto}>
+                    <Text style={styles.addButtonText}>Ajouter des photos</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.publishButton}
+                    onPress={publierAnnonce}
+                    disabled={uploading}
+                >
+                    <Text style={styles.publishButtonText}>
+                        {uploading ? "Publication en cours..." : "Publier l'annonce"}
+                    </Text>
+                </TouchableOpacity>
+            </View>
 
             <StatusBar style="auto" />
         </ScrollView>
@@ -136,9 +169,13 @@ export default function AjoutAnnonceScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
-        backgroundColor: "#fff",
         padding: 20,
+        flexGrow: 1,
+        justifyContent: "flex-start",
+        backgroundColor: "#fff", // Fond blanc pour toute la page
+    },
+    formContainer: {
+        width: "100%",
         alignItems: "center",
     },
     title: {
@@ -152,8 +189,8 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     photo: {
-        width: 100,
-        height: 100,
+        width: 230,
+        height: 230,
         borderRadius: 8,
         marginRight: 10,
     },
@@ -179,6 +216,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         fontSize: 16,
         marginBottom: 15,
+        backgroundColor: "#fff",
+    },
+    pickerContainer: {
+        width: "100%",
+        height: 50,
+        borderColor: "#ffffff",
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 15,
+        justifyContent: "center",
+        backgroundColor: "#ffffff",
+        overflow: "hidden", // Empêche les débordements
     },
     textArea: {
         width: "100%",
@@ -190,6 +239,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 15,
         textAlignVertical: "top",
+        backgroundColor: "#fff",
     },
     publishButton: {
         backgroundColor: "#28A745",
@@ -204,3 +254,4 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
 });
+
