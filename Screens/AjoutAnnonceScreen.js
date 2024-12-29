@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import {
     StyleSheet,
@@ -8,7 +9,6 @@ import {
     ScrollView,
     Image,
 } from "react-native";
-import { useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { auth } from "../Firebase";
 import { getDatabase, ref, push, set } from "firebase/database";
@@ -20,19 +20,15 @@ export default function AjoutAnnonceScreen() {
     const [description, setDescription] = useState("");
     const [prix, setPrix] = useState("");
     const [categorie, setCategorie] = useState("");
+    const [sousCategorie, setSousCategorie] = useState("");
     const [uploading, setUploading] = useState(false);
 
     const categories = [
-        "Vêtements",
-        "Chaussures",
-        "Accessoires",
-        "Maison",
-        "Électronique",
-        "Sport & Loisir",
-        "Enfant",
-        "Livres",
-        "Divertissement",
-        "Autre",
+        { label: "Homme", subcategories: ["T-shirts", "Pantalons", "Vestes", "Accessoires"] },
+        { label: "Femme", subcategories: ["Robes", "Jupes", "Tops", "Accessoires"] },
+        { label: "Enfant", subcategories: ["Pyjamas", "Jeans", "Sweatshirts", "Accessoires"] },
+        { label: "Électronique", subcategories: ["Téléphones", "Ordinateurs", "Accessoires", "Autres"] },
+        { label: "Maison", subcategories: ["Meubles", "Décoration", "Électroménager", "Autres"] },
     ];
 
     const ajouterPhoto = async () => {
@@ -47,7 +43,7 @@ export default function AjoutAnnonceScreen() {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsMultipleSelection: true,
             base64: true,
-            quality: 0, // Réduction de la qualité pour optimiser le stockage
+            quality: 0,
         });
 
         if (!result.canceled) {
@@ -62,7 +58,7 @@ export default function AjoutAnnonceScreen() {
             return;
         }
 
-        if (!objet || !description || !prix || !categorie || photos.length === 0) {
+        if (!objet || !description || !prix || !categorie || !sousCategorie || photos.length === 0) {
             alert("Veuillez remplir tous les champs et ajouter au moins une photo !");
             return;
         }
@@ -81,6 +77,7 @@ export default function AjoutAnnonceScreen() {
                 description,
                 prix,
                 categorie,
+                sousCategorie,
                 dateAjout: new Date().toISOString(),
             });
 
@@ -90,6 +87,7 @@ export default function AjoutAnnonceScreen() {
             setDescription("");
             setPrix("");
             setCategorie("");
+            setSousCategorie("");
         } catch (error) {
             console.error("Erreur lors de la publication de l'annonce :", error);
             alert("Une erreur est survenue. Veuillez réessayer.");
@@ -134,18 +132,36 @@ export default function AjoutAnnonceScreen() {
                     keyboardType="numeric"
                 />
 
-                {/* Picker pour les catégories */}
                 <View style={styles.pickerContainer}>
                     <Picker
                         selectedValue={categorie}
-                        onValueChange={(value) => setCategorie(value)}
+                        onValueChange={(value) => {
+                            setCategorie(value);
+                            setSousCategorie(""); // Réinitialiser la sous-catégorie
+                        }}
                     >
                         <Picker.Item label="Sélectionner une catégorie" value="" />
                         {categories.map((cat, index) => (
-                            <Picker.Item key={index} label={cat} value={cat} />
+                            <Picker.Item key={index} label={cat.label} value={cat.label} />
                         ))}
                     </Picker>
                 </View>
+
+                {categorie && (
+                    <View style={styles.pickerContainer}>
+                        <Picker
+                            selectedValue={sousCategorie}
+                            onValueChange={(value) => setSousCategorie(value)}
+                        >
+                            <Picker.Item label="Sélectionner une sous-catégorie" value="" />
+                            {categories
+                                .find((cat) => cat.label === categorie)
+                                ?.subcategories.map((subcat, index) => (
+                                    <Picker.Item key={index} label={subcat} value={subcat} />
+                                ))}
+                        </Picker>
+                    </View>
+                )}
 
                 <TouchableOpacity style={styles.addButton} onPress={ajouterPhoto}>
                     <Text style={styles.addButtonText}>Ajouter des photos</Text>
@@ -172,7 +188,7 @@ const styles = StyleSheet.create({
         padding: 20,
         flexGrow: 1,
         justifyContent: "flex-start",
-        backgroundColor: "#fff", // Fond blanc pour toute la page
+        backgroundColor: "#fff",
     },
     formContainer: {
         width: "100%",
@@ -187,12 +203,47 @@ const styles = StyleSheet.create({
     photoContainer: {
         flexDirection: "row",
         marginBottom: 20,
+        flexWrap: "wrap",
     },
     photo: {
         width: 230,
         height: 230,
         borderRadius: 8,
         marginRight: 10,
+    },
+    pickerContainer: {
+        width: "100%",
+        height: 50,
+        borderColor: "#ccc",
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 15,
+        justifyContent: "center",
+        //backgroundColor: "#fff",
+        overflow: "hidden", // Évite le débordement
+    },
+    input: {
+        width: "100%",
+        height: 50,
+        borderColor: "#ccc",
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        fontSize: 16,
+        marginBottom: 15,
+        backgroundColor: "#fff",
+    },
+    textArea: {
+        width: "100%",
+        height: 100,
+        borderColor: "#ccc",
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        fontSize: 16,
+        marginBottom: 15,
+        textAlignVertical: "top",
+        //backgroundColor: "#fff",
     },
     addButton: {
         backgroundColor: "#007BFF",
@@ -207,40 +258,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
     },
-    input: {
-        width: "100%",
-        height: 50,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        marginBottom: 15,
-        backgroundColor: "#fff",
-    },
-    pickerContainer: {
-        width: "100%",
-        height: 50,
-        borderColor: "#ffffff",
-        borderWidth: 1,
-        borderRadius: 8,
-        marginBottom: 15,
-        justifyContent: "center",
-        backgroundColor: "#ffffff",
-        overflow: "hidden", // Empêche les débordements
-    },
-    textArea: {
-        width: "100%",
-        height: 100,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        marginBottom: 15,
-        textAlignVertical: "top",
-        backgroundColor: "#fff",
-    },
     publishButton: {
         backgroundColor: "#28A745",
         padding: 15,
@@ -254,4 +271,3 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
 });
-

@@ -1,5 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, ScrollView, Alert } from "react-native";
+import { Picker } from "@react-native-picker/picker"; // Assurez-vous d'avoir installé ce package
 import { useRoute } from "@react-navigation/native";
 import { useState } from "react";
 import { getDatabase, ref, update } from "firebase/database";
@@ -13,6 +14,16 @@ export default function AnnonceModifScreen() {
     const [description, setDescription] = useState(annonce.description);
     const [prix, setPrix] = useState(annonce.prix.toString());
     const [photos, setPhotos] = useState(annonce.photos);
+    const [categorie, setCategorie] = useState(annonce.categorie || "");
+    const [sousCategorie, setSousCategorie] = useState("");
+
+    const categories = [
+        { label: "Homme", subcategories: ["T-shirts", "Pantalons", "Vestes", "Accessoires"] },
+        { label: "Femme", subcategories: ["Robes", "Jupes", "Tops", "Accessoires"] },
+        { label: "Enfant", subcategories: ["Pyjamas", "Jeans", "Sweatshirts", "Accessoires"] },
+        { label: "Électronique", subcategories: ["Téléphones", "Ordinateurs", "Accessoires", "Autres"] },
+        { label: "Maison", subcategories: ["Meubles", "Décoration", "Électroménager", "Autres"] },
+    ];
 
     const handleSave = () => {
         if (!annonce.id) {
@@ -28,6 +39,8 @@ export default function AnnonceModifScreen() {
             description,
             prix: parseFloat(prix),
             photos,
+            categorie,
+            sousCategorie,
         })
             .then(() => alert("Annonce mise à jour avec succès !"))
             .catch((error) => alert("Erreur lors de la mise à jour : " + error.message));
@@ -44,11 +57,10 @@ export default function AnnonceModifScreen() {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             base64: true,
-            quality: 0.7, // Réduction de la qualité pour optimiser le stockage
+            quality: 0.7,
         });
 
         if (!result.canceled) {
-            // Ajouter la photo sélectionnée à la liste
             const newPhotos = result.assets.map((asset) => asset.base64);
             setPhotos([...photos, ...newPhotos]);
         }
@@ -95,6 +107,32 @@ export default function AnnonceModifScreen() {
                 onChangeText={setPrix}
                 keyboardType="numeric"
             />
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={categorie}
+                    onValueChange={(value) => setCategorie(value)}
+                >
+                    <Picker.Item label="Sélectionner une catégorie" value="" />
+                    {categories.map((cat, index) => (
+                        <Picker.Item key={index} label={cat.label} value={cat.label} />
+                    ))}
+                </Picker>
+            </View>
+            {categorie && (
+                <View style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={sousCategorie}
+                        onValueChange={(value) => setSousCategorie(value)}
+                    >
+                        <Picker.Item label="Sélectionner une sous-catégorie" value="" />
+                        {categories
+                            .find((cat) => cat.label === categorie)
+                            ?.subcategories.map((subcat, index) => (
+                                <Picker.Item key={index} label={subcat} value={subcat} />
+                            ))}
+                    </Picker>
+                </View>
+            )}
             <Text style={styles.subtitle}>Photos</Text>
             <ScrollView horizontal style={styles.photosContainer}>
                 {photos.map((photo, index) => (
@@ -141,6 +179,16 @@ const styles = StyleSheet.create({
         padding: 10,
         marginBottom: 15,
         backgroundColor: "#fff",
+    },
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        marginBottom: 15,
+        backgroundColor: "#fff",
+        height: 40,
+        justifyContent: "center",
+        overflow: "hidden",
     },
     textArea: {
         height: 100,
