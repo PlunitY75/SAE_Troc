@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image } from "react-native";
 import { useState } from "react";
@@ -11,25 +12,16 @@ export default function AjoutAnnonceScreen() {
     const [objet, setObjet] = useState("");
     const [description, setDescription] = useState("");
     const [prix, setPrix] = useState("");
-    const [categorie, setCategorie] = useState(""); // État pour la catégorie
+    const [categorie, setCategorie] = useState("");
+    const [sousCategorie, setSousCategorie] = useState("");
     const [uploading, setUploading] = useState(false);
 
     const categories = [
-        "Instruments de musique",
-        "Équipements électroniques",
-        "Meubles et décoration",
-        "Loisirs et sports",
-        "Livres, films et jeux vidéo",
-        "Vêtements et accessoires",
-        "Outils et bricolage",
-        "Équipements pour enfants",
-        "Véhicules et pièces détachées",
-        "Cuisine et électroménager",
-        "Jardinage et extérieur",
-        "Santé et bien-être",
-        "Art et artisanat",
-        "Animaux et accessoires",
-        "Autres",
+        { label: "Homme", subcategories: ["T-shirts", "Pantalons", "Vestes", "Accessoires"] },
+        { label: "Femme", subcategories: ["Robes", "Jupes", "Tops", "Accessoires"] },
+        { label: "Enfant", subcategories: ["Pyjamas", "Jeans", "Sweatshirts", "Accessoires"] },
+        { label: "Électronique", subcategories: ["Téléphones", "Ordinateurs", "Accessoires", "Autres"] },
+        { label: "Maison", subcategories: ["Meubles", "Décoration", "Électroménager", "Autres"] },
     ];
 
     const ajouterPhoto = async () => {
@@ -44,7 +36,7 @@ export default function AjoutAnnonceScreen() {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsMultipleSelection: true,
             base64: true,
-            quality: 0, // Réduction de la qualité pour optimiser le stockage
+            quality: 0,
         });
 
         if (!result.canceled) {
@@ -59,8 +51,8 @@ export default function AjoutAnnonceScreen() {
             return;
         }
 
-        if (!objet || !description || !prix || !categorie || photos.length === 0) {
-            alert("Veuillez remplir tous les champs, sélectionner une catégorie et ajouter au moins une photo !");
+        if (!objet || !description || !prix || !categorie || !sousCategorie || photos.length === 0) {
+            alert("Veuillez remplir tous les champs et ajouter au moins une photo !");
             return;
         }
 
@@ -77,7 +69,8 @@ export default function AjoutAnnonceScreen() {
                 objet,
                 description,
                 prix,
-                categorie, // Inclure la catégorie
+                categorie,
+                sousCategorie,
                 dateAjout: new Date().toISOString(),
             });
 
@@ -87,6 +80,7 @@ export default function AjoutAnnonceScreen() {
             setDescription("");
             setPrix("");
             setCategorie("");
+            setSousCategorie("");
         } catch (error) {
             console.error("Erreur lors de la publication de l'annonce :", error);
             alert("Une erreur est survenue. Veuillez réessayer.");
@@ -97,70 +91,85 @@ export default function AjoutAnnonceScreen() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Ajouter une annonce</Text>
+            <View style={styles.formContainer}>
+                <Text style={styles.title}>Ajouter une annonce</Text>
 
-            {/* Afficher les photos ajoutées */}
-            <ScrollView horizontal style={styles.photoContainer}>
-                {photos.map((photo, index) => (
-                    <Image
-                        key={index}
-                        source={{ uri: `data:image/png;base64,${photo}` }}
-                        style={styles.photo}
-                    />
-                ))}
-            </ScrollView>
-
-            {/* Bouton pour ajouter des photos */}
-            <TouchableOpacity style={styles.addButton} onPress={ajouterPhoto}>
-                <Text style={styles.addButtonText}>Ajouter des photos</Text>
-            </TouchableOpacity>
-
-            {/* Champs de formulaire */}
-            <TextInput
-                style={styles.input}
-                placeholder="Nom de l'objet"
-                value={objet}
-                onChangeText={setObjet}
-            />
-            <TextInput
-                style={styles.textArea}
-                placeholder="Description"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Prix à la journée (€)"
-                value={prix}
-                onChangeText={setPrix}
-                keyboardType="numeric"
-            />
-
-            {/* Menu déroulant pour sélectionner une catégorie */}
-            <Text style={styles.label}>Catégorie</Text>
-            <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={categorie}
-                    onValueChange={(itemValue) => setCategorie(itemValue)}
-                >
-                    <Picker.Item label="-- Sélectionnez une catégorie --" value="" />
-                    {categories.map((cat, index) => (
-                        <Picker.Item key={index} label={cat} value={cat} />
+                <ScrollView horizontal style={styles.photoContainer}>
+                    {photos.map((photo, index) => (
+                        <Image
+                            key={index}
+                            source={{ uri: `data:image/png;base64,${photo}` }}
+                            style={styles.photo}
+                        />
                     ))}
-                </Picker>
-            </View>
+                </ScrollView>
 
-            {/* Bouton pour publier l'annonce */}
-            <TouchableOpacity
-                style={styles.publishButton}
-                onPress={publierAnnonce}
-                disabled={uploading}
-            >
-                <Text style={styles.publishButtonText}>
-                    {uploading ? "Publication en cours..." : "Publier l'annonce"}
-                </Text>
-            </TouchableOpacity>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Nom de l'objet"
+                    value={objet}
+                    onChangeText={setObjet}
+                />
+                <TextInput
+                    style={styles.textArea}
+                    placeholder="Description"
+                    value={description}
+                    onChangeText={setDescription}
+                    multiline
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Prix à la journée (€)"
+                    value={prix}
+                    onChangeText={setPrix}
+                    keyboardType="numeric"
+                />
+
+                <View style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={categorie}
+                        onValueChange={(value) => {
+                            setCategorie(value);
+                            setSousCategorie(""); // Réinitialiser la sous-catégorie
+                        }}
+                    >
+                        <Picker.Item label="Sélectionner une catégorie" value="" />
+                        {categories.map((cat, index) => (
+                            <Picker.Item key={index} label={cat.label} value={cat.label} />
+                        ))}
+                    </Picker>
+                </View>
+
+                {categorie && (
+                    <View style={styles.pickerContainer}>
+                        <Picker
+                            selectedValue={sousCategorie}
+                            onValueChange={(value) => setSousCategorie(value)}
+                        >
+                            <Picker.Item label="Sélectionner une sous-catégorie" value="" />
+                            {categories
+                                .find((cat) => cat.label === categorie)
+                                ?.subcategories.map((subcat, index) => (
+                                    <Picker.Item key={index} label={subcat} value={subcat} />
+                                ))}
+                        </Picker>
+                    </View>
+                )}
+
+                <TouchableOpacity style={styles.addButton} onPress={ajouterPhoto}>
+                    <Text style={styles.addButtonText}>Ajouter des photos</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.publishButton}
+                    onPress={publierAnnonce}
+                    disabled={uploading}
+                >
+                    <Text style={styles.publishButtonText}>
+                        {uploading ? "Publication en cours..." : "Publier l'annonce"}
+                    </Text>
+                </TouchableOpacity>
+            </View>
 
             <StatusBar style="auto" />
         </ScrollView>
@@ -169,9 +178,13 @@ export default function AjoutAnnonceScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
-        backgroundColor: "#fff",
         padding: 20,
+        flexGrow: 1,
+        justifyContent: "flex-start",
+        backgroundColor: "#fff",
+    },
+    formContainer: {
+        width: "100%",
         alignItems: "center",
     },
     title: {
@@ -183,12 +196,47 @@ const styles = StyleSheet.create({
     photoContainer: {
         flexDirection: "row",
         marginBottom: 20,
+        flexWrap: "wrap",
     },
     photo: {
-        width: 100,
-        height: 100,
+        width: 230,
+        height: 230,
         borderRadius: 8,
         marginRight: 10,
+    },
+    pickerContainer: {
+        width: "100%",
+        height: 50,
+        borderColor: "#ccc",
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 15,
+        justifyContent: "center",
+        //backgroundColor: "#fff",
+        overflow: "hidden", // Évite le débordement
+    },
+    input: {
+        width: "100%",
+        height: 50,
+        borderColor: "#ccc",
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        fontSize: 16,
+        marginBottom: 15,
+        backgroundColor: "#fff",
+    },
+    textArea: {
+        width: "100%",
+        height: 100,
+        borderColor: "#ccc",
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        fontSize: 16,
+        marginBottom: 15,
+        textAlignVertical: "top",
+        //backgroundColor: "#fff",
     },
     addButton: {
         backgroundColor: "#007BFF",
@@ -202,40 +250,6 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "600",
-    },
-    input: {
-        width: "100%",
-        height: 50,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        marginBottom: 15,
-    },
-    textArea: {
-        width: "100%",
-        height: 100,
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        marginBottom: 15,
-        textAlignVertical: "top",
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: "bold",
-        marginBottom: 5,
-        alignSelf: "flex-start",
-    },
-    pickerContainer: {
-        width: "100%",
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 8,
-        marginBottom: 15,
     },
     publishButton: {
         backgroundColor: "#28A745",
