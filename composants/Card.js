@@ -4,7 +4,7 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 const Card = ({ imageSource, title, description, price, date, }) => {
     // Fonction pour tronquer la description
     const truncateText = () => {
-        return description.length > 80 ? description.substring(0, 60) + "..." : description;
+        return description.length > 70 ? description.substring(0, 70) + "..." : description;
     };
 
     return (
@@ -16,7 +16,7 @@ const Card = ({ imageSource, title, description, price, date, }) => {
                 <View>
                     <Text style={styles.cardTitle}>{title}</Text>
                     {/* Description tronquée */}
-                    <Text style={styles.cardDescription}>{truncateText(description, 50)}</Text>
+                    <Text style={styles.cardDescription}>{truncateText()}</Text>
                 </View>
                 <View style={styles.bottomCardContainer}>
                     <Text style={styles.cardPrice}>{price}</Text>

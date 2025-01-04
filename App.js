@@ -43,6 +43,7 @@ export default function App() {
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ title: 'Nouveau Compte' }} />
             <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ title: 'Connexion' }} />
             <Stack.Screen name="AnnonceModifScreen" component={AnnonceModifScreen} options={{ title: 'Modifier votre annonce' }} />
+              <Stack.Screen name="CompteScreen" component={CompteScreen} options={{ title: 'Votre espace compte' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </ConversationsContext.Provider>

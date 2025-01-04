@@ -3,8 +3,13 @@ import { View, TextInput, StyleSheet, ScrollView, Text, Button, TouchableOpacity
 import Card from '../composants/Card.js';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { useNavigation } from "@react-navigation/native";
 
 export default function App() {
+    const navigation = useNavigation();
+    const connexionRedirection = () => {
+        navigation.navigate("CompteScreen");
+    };
     const cards = [
         { id: '1', image: require('../images/guitare1.jpg'), title: 'Guitare 1', description: 'Une superbe guitare guitareguitareguitareguitareguitareguitaredescriptiondescription!', price: '15€', date:'03/01/2025' },
         { id: '2', image: require('../images/guitare2.jpg'), title: 'Guitare 2', description: 'Guitare électrique cool.', price: '25€' },
@@ -20,7 +25,7 @@ export default function App() {
         <View style={styles.container}>
             {/* Barre de recherche */}
             <View style={styles.topNavBarContainer}>
-                <TouchableOpacity style={styles.navBarButton} onPress={() => { console.log("touch") }}>
+                <TouchableOpacity style={styles.navBarButton} onPress={() => { connexionRedirection() }}>
                     <MaterialCommunityIcons name="account" size={35} color="#687a86" />
                 </TouchableOpacity>
 
