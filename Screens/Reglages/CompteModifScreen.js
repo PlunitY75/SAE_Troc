@@ -1,28 +1,13 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, Image } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { auth } from "../../Firebase";
-import { getDatabase, ref, set } from "firebase/database";
+import { getDatabase, ref, onValue, update } from "firebase/database";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
 
-function enregistrementDesUtilisateurs(userId, name, email, adressePostal, photoBase64) {
-    const db = getDatabase();
-    set(ref(db, "users/" + userId), {
-        name: name,
-        email: email,
-        adressePostal: adressePostal,
-        
-    });
-
-    set(ref(db, "users/"+userId+"/imageBase64"), {
-        photoBase64: photoBase64,
-    })
-}
-
-export default function RegisterScreen() {
+export default function CompteModifScreen() {
     const [name, setName] = useState("");
-    const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
     const [adressePostal, setAdressePostal] = useState("");
     const [photo, setPhoto] = useState(null);
@@ -31,67 +16,90 @@ export default function RegisterScreen() {
 
     const navigation = useNavigation();
 
-    const connexionRedirection = () => {
-        navigation.navigate("LoginScreen");
-    };
+    const currentUser = auth.currentUser;
+
+    useEffect(() => {
+        if (currentUser) {
+            const db = getDatabase();
+            const userRef = ref(db, `users/${currentUser.uid}`);
+
+            onValue(userRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    setName(data.name || "");
+                    setEmail(data.email || "");
+                    setAdressePostal(data.adressePostal || "");
+                    if (data.imageBase64 && data.imageBase64.photoBase64) {
+                        setPhoto(`data:image/jpeg;base64,${data.imageBase64.photoBase64}`);
+                        setPhotoBase64(data.imageBase64.photoBase64);
+                    }
+                }
+            });
+        }
+    }, [currentUser]);
 
     const pickImage = async () => {
-        // Demande d'autorisation d'accès à la galerie
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== "granted") {
             alert("Permission d'accéder à la galerie refusée !");
             return;
         }
 
-        // Ouvre la galerie pour sélectionner une image
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [1, 1], // Rendre l'image carrée
-            quality: 0, // Réduire la qualité à 50%
-            base64: true, // Encode directement en base64
+            aspect: [1, 1],
+            quality: 0.5,
+            base64: true,
         });
-        
 
         if (!result.canceled) {
-            setPhoto(result.assets[0].uri); // URI de l'image pour l'affichage
-            setPhotoBase64(result.assets[0].base64); // Base64 pour le stockage
+            setPhoto(result.assets[0].uri);
+            setPhotoBase64(result.assets[0].base64);
         }
     };
 
-    const creationCompte = async () => {
-        if (!name || !email || !password || !adressePostal || !photoBase64) {
-            alert("Veuillez remplir tous les champs et ajouter une photo de profil avant de créer votre compte.");
+    const modifierCompte = async () => {
+        if (!currentUser) {
+            alert("Utilisateur non connecté !");
             return;
         }
-    
+
+        setUploading(true);
+
         try {
-            // Création de l'utilisateur
-            await auth.createUserWithEmailAndPassword(email, password);
-            const user = auth.currentUser;
-    
-            // Enregistrement dans la base de données
-            enregistrementDesUtilisateurs(user.uid, name, email, adressePostal, photoBase64);
-    
-            // Redirection après l'inscription
+            const db = getDatabase();
+            const updates = {
+                name: name,
+                email: email,
+                adressePostal: adressePostal,
+            };
+
+            if (photoBase64) {
+                updates.imageBase64 = { photoBase64: photoBase64 };
+            }
+
+            await update(ref(db, `users/${currentUser.uid}`), updates);
+
+            alert("Compte mis à jour avec succès !");
             navigation.navigate("Home");
         } catch (error) {
             console.error(error);
-            alert("Erreur lors de l'inscription. Veuillez réessayer.");
+            alert("Erreur lors de la mise à jour. Veuillez réessayer.");
+        } finally {
+            setUploading(false);
         }
     };
-    
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Créer un compte</Text>
+            <Text style={styles.title}>Modifier votre compte</Text>
 
-            {/* Sélection et affichage de l'image */}
             <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
                 {photo ? (
                     <Image source={{ uri: photo }} style={styles.profileImage} />
                 ) : (
-                    <Text style={styles.imagePickerText}>Ajouter une photo de profil</Text>
+                    <Text style={styles.imagePickerText}>Changer la photo de profil</Text>
                 )}
             </TouchableOpacity>
 
@@ -114,25 +122,11 @@ export default function RegisterScreen() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Mot de passe"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
 
-            {/* Bouton d'inscription */}
-            <TouchableOpacity style={styles.button} onPress={creationCompte} disabled={uploading}>
-                <Text style={styles.buttonText}>{uploading ? "Téléversement en cours..." : "S'inscrire"}</Text>
+            <TouchableOpacity style={styles.button} onPress={modifierCompte} disabled={uploading}>
+                <Text style={styles.buttonText}>{uploading ? "Mise à jour..." : "Mettre à jour"}</Text>
             </TouchableOpacity>
 
-            <Text style={styles.footerText}>
-                Vous avez déjà un compte ?{" "}
-                <Text style={styles.link} onPress={connexionRedirection}>
-                    Connectez-vous
-                </Text>
-            </Text>
             <StatusBar style="auto" />
         </View>
     );
@@ -194,14 +188,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "#fff",
         fontWeight: "600",
-    },
-    footerText: {
-        fontSize: 14,
-        color: "#666",
-        marginTop: 20,
-    },
-    link: {
-        color: "#007BFF",
-        fontWeight: "bold",
     },
 });

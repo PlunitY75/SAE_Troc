@@ -14,6 +14,7 @@ import AjoutAnnonceScreen from './Screens/AjoutAnnonceScreen';
 import RegisterScreen from './Screens/Login/RegisterScreen';
 import LoginScreen from './Screens/Login/LoginScreen'
 import AnnonceModifScreen from './Screens/Reglages/AnnonceModifScreen';
+import CompteModifScreen from './Screens/Reglages/CompteModifScreen';
 
 export const ConversationsContext = createContext();
 
@@ -43,6 +44,8 @@ export default function App() {
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ title: 'Nouveau Compte' }} />
             <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ title: 'Connexion' }} />
             <Stack.Screen name="AnnonceModifScreen" component={AnnonceModifScreen} options={{ title: 'Modifier votre annonce' }} />
+            <Stack.Screen name="CompteModifScreen" component={CompteModifScreen} options={{ title: 'Modifier votre compte' }} />
+            
           </Stack.Navigator>
         </NavigationContainer>
       </ConversationsContext.Provider>

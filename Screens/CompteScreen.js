@@ -95,13 +95,13 @@ export default function CompteScreen() {
                     style={styles.profileImage}
                 />
                 <Text style={styles.profileName}>{userData?.name || user.email}</Text>
-                <Text style={styles.profileDescription}>
+                {/* <Text style={styles.profileDescription}>
                     {userData?.adressePostal || "Adresse non renseignée"}
-                </Text>
+                </Text> */}
             </View>
 
             <View style={styles.actionsContainer}>
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('CompteModifScreen')}>
                     <Text style={styles.actionText}>Modifier le profil</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
