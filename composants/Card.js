@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 
-const Card = ({ imageSource, title, description, price, date, }) => {
+const Card = ({ imageSource, title, description, price, date, tempsLocation}) => {
     // Fonction pour tronquer la description
     const truncateText = () => {
-        return description.length > 70 ? description.substring(0, 70) + "..." : description;
+        return description.length > 65 ? description.substring(0, 65) + "..." : description;
     };
 
     return (
@@ -19,7 +19,7 @@ const Card = ({ imageSource, title, description, price, date, }) => {
                     <Text style={styles.cardDescription}>{truncateText()}</Text>
                 </View>
                 <View style={styles.bottomCardContainer}>
-                    <Text style={styles.cardPrice}>{price}</Text>
+                    <Text style={styles.cardPrice}>{price} {tempsLocation}</Text>
                     <Text style={styles.cardDate}>{date}</Text>
                 </View>
             </View>
@@ -29,8 +29,9 @@ const Card = ({ imageSource, title, description, price, date, }) => {
 
 const styles = StyleSheet.create({
     cardContainer: {
-        width: 200,
-        margin: 10,
+        width: 180,
+        height:275,
+        margin: 5,
         backgroundColor: '#fff',
         borderRadius: 10,
         shadowColor: '#000',
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        resizeMode: 'contain',
+        resizeMode: 'center',
         height: 150,
         backgroundColor: '#ddd',
     },
@@ -67,9 +68,8 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     bottomCardContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        flexDirection: 'column',
+        margin:0,
     },
     cardPrice: {
         fontSize: 16,

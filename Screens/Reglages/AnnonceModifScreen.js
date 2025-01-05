@@ -33,6 +33,17 @@ export default function AnnonceModifScreen() {
             return;
         }
 
+        if (
+            !objet ||
+            !description ||
+            !categorie ||
+            !sousCategorie ||
+            photos.length === 0 ||
+            !transactionType
+        ) {
+            alert("Veuillez remplir tous les champs et ajouter au moins une photo !");
+            return;
+        }
         const db = getDatabase();
         const annonceRef = ref(db, `annonces/${annonce.id}`);
 
@@ -106,7 +117,7 @@ export default function AnnonceModifScreen() {
                 onChangeText={setDescription}
                 multiline
             />
-            {transactionType !== 'Troc' && (
+            {transactionType !== "Troc" && (
                 <TextInput
                     style={styles.input}
                     placeholder="Prix"
@@ -132,7 +143,6 @@ export default function AnnonceModifScreen() {
                         selectedValue={sousCategorie}
                         onValueChange={(value) => setSousCategorie(value)}
                     >
-                        <Picker.Item label="Sélectionner une sous-catégorie" value="" />
                         {categories
                             .find((cat) => cat.label === categorie)
                             ?.subcategories.map((subcat, index) => (
@@ -146,7 +156,6 @@ export default function AnnonceModifScreen() {
                     selectedValue={transactionType}
                     onValueChange={(value) => setTransactionType(value)}
                 >
-                    <Picker.Item label="Sélectionner le type de transaction" value="" />
                     <Picker.Item label="Troc" value="Troc" />
                     <Picker.Item label="Achat" value="Achat" />
                     <Picker.Item label="Location" value="Location" />
@@ -158,7 +167,6 @@ export default function AnnonceModifScreen() {
                         selectedValue={locationDuration}
                         onValueChange={(value) => setLocationDuration(value)}
                     >
-                        <Picker.Item label="Sélectionner la durée de location" value="" />
                         <Picker.Item label="Par jour" value="Jour" />
                         <Picker.Item label="Par semaine" value="Semaine" />
                         <Picker.Item label="Par mois" value="Mois" />
