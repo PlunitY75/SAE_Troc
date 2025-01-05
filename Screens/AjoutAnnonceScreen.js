@@ -21,6 +21,8 @@ export default function AjoutAnnonceScreen() {
     const [prix, setPrix] = useState("");
     const [categorie, setCategorie] = useState("");
     const [sousCategorie, setSousCategorie] = useState("");
+    const [transactionType, setTransactionType] = useState(""); // Type de transaction
+    const [locationDuration, setLocationDuration] = useState(""); // Durée de location
     const [uploading, setUploading] = useState(false);
 
     const categories = [
@@ -58,10 +60,32 @@ export default function AjoutAnnonceScreen() {
             return;
         }
 
-        if (!objet || !description || !prix || !categorie || !sousCategorie || photos.length === 0) {
+        // Validation des champs selon le type de transaction
+        if (
+            !objet ||
+            !description ||
+            !categorie ||
+            !sousCategorie ||
+            photos.length === 0 ||
+            !transactionType
+        ) {
             alert("Veuillez remplir tous les champs et ajouter au moins une photo !");
             return;
         }
+
+        // Validation spécifique pour "Location"
+        if (transactionType === "Location" && !locationDuration) {
+            alert("Veuillez sélectionner une durée de location !");
+            return;
+        }
+
+        // Validation spécifique pour "Achat"
+        if (transactionType === "Achat" && !prix) {
+            alert("Veuillez indiquer un prix !");
+            return;
+        }
+
+        // Pas de validation supplémentaire pour "Troc" si aucun champ additionnel n'est requis
 
         setUploading(true);
 
@@ -75,9 +99,11 @@ export default function AjoutAnnonceScreen() {
                 photos,
                 objet,
                 description,
-                prix,
+                prix: transactionType === "Achat" || "Location" ? prix : null, // Prix uniquement pour Achat
                 categorie,
                 sousCategorie,
+                transactionType,
+                locationDuration: transactionType === "Location" ? locationDuration : null, // Durée uniquement pour Location
                 dateAjout: new Date().toISOString(),
             });
 
@@ -88,6 +114,8 @@ export default function AjoutAnnonceScreen() {
             setPrix("");
             setCategorie("");
             setSousCategorie("");
+            setTransactionType("");
+            setLocationDuration("");
         } catch (error) {
             console.error("Erreur lors de la publication de l'annonce :", error);
             alert("Une erreur est survenue. Veuillez réessayer.");
@@ -95,6 +123,7 @@ export default function AjoutAnnonceScreen() {
             setUploading(false);
         }
     };
+
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -124,13 +153,15 @@ export default function AjoutAnnonceScreen() {
                     onChangeText={setDescription}
                     multiline
                 />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Prix à la journée (€)"
-                    value={prix}
-                    onChangeText={setPrix}
-                    keyboardType="numeric"
-                />
+                {transactionType !== "Troc" && (
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Prix (€)"
+                        value={prix}
+                        onChangeText={setPrix}
+                        keyboardType="numeric"
+                    />
+                )}
 
                 <View style={styles.pickerContainer}>
                     <Picker
@@ -159,6 +190,32 @@ export default function AjoutAnnonceScreen() {
                                 ?.subcategories.map((subcat, index) => (
                                     <Picker.Item key={index} label={subcat} value={subcat} />
                                 ))}
+                        </Picker>
+                    </View>
+                )}
+
+                <View style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={transactionType}
+                        onValueChange={(value) => setTransactionType(value)}
+                    >
+                        <Picker.Item label="Sélectionner le type de transaction" value="" />
+                        <Picker.Item label="Troc" value="Troc" />
+                        <Picker.Item label="Achat" value="Achat" />
+                        <Picker.Item label="Location" value="Location" />
+                    </Picker>
+                </View>
+
+                {transactionType === "Location" && (
+                    <View style={styles.pickerContainer}>
+                        <Picker
+                            selectedValue={locationDuration}
+                            onValueChange={(value) => setLocationDuration(value)}
+                        >
+                            <Picker.Item label="Sélectionner la durée de location" value="" />
+                            <Picker.Item label="Par jour" value="Jour" />
+                            <Picker.Item label="Par semaine" value="Semaine" />
+                            <Picker.Item label="Par mois" value="Mois" />
                         </Picker>
                     </View>
                 )}
@@ -219,8 +276,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginBottom: 15,
         justifyContent: "center",
-        //backgroundColor: "#fff",
-        overflow: "hidden", // Évite le débordement
+        overflow: "hidden",
     },
     input: {
         width: "100%",
@@ -243,7 +299,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 15,
         textAlignVertical: "top",
-        //backgroundColor: "#fff",
     },
     addButton: {
         backgroundColor: "#007BFF",

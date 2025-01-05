@@ -111,23 +111,29 @@ export default function CompteScreen() {
 
             <Text style={styles.sectionTitle}>Mes annonces</Text>
             <FlatList
-    data={annonces}
-    keyExtractor={(item) => item.id} // Utiliser l'ID comme clé
-    numColumns={2}
-    renderItem={({ item }) => (
-        <TouchableOpacity onPress={() => handleAnnoncePress(item)}>
-            <View style={styles.annonceCard}>
-                <Image
-                    source={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                    style={styles.annonceImage}
-                />
-                <Text style={styles.annonceTitle}>{item.objet}</Text>
-                <Text style={styles.annoncePrice}>{item.prix}€/semaine</Text>
-            </View>
-        </TouchableOpacity>
-    )}
-/>
-
+                data={annonces}
+                keyExtractor={(item) => item.id} // Utiliser l'ID comme clé
+                numColumns={2}
+                renderItem={({ item }) => (
+                    <TouchableOpacity onPress={() => handleAnnoncePress(item)}>
+                        <View style={styles.annonceCard}>
+                            <Image
+                                source={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                style={styles.annonceImage}
+                            />
+                            <Text style={styles.annonceTitle}>{item.objet}</Text>
+                            {item.transactionType !== "Troc" && (
+                                <Text style={styles.annoncePrice}>
+                                    {item.prix}€{item.locationDuration ? ' / ' + item.locationDuration : ''}
+                                </Text>
+                            )}
+                            {item.transactionType === "Troc" && (
+                                <Text style={styles.annoncePrice}>Troc</Text>
+                            )}
+                        </View>
+                    </TouchableOpacity>
+                )}
+            />
             <StatusBar style="auto" />
         </View>
     );

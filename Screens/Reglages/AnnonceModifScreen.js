@@ -15,7 +15,9 @@ export default function AnnonceModifScreen() {
     const [prix, setPrix] = useState(annonce.prix.toString());
     const [photos, setPhotos] = useState(annonce.photos);
     const [categorie, setCategorie] = useState(annonce.categorie || "");
-    const [sousCategorie, setSousCategorie] = useState("");
+    const [sousCategorie, setSousCategorie] = useState(annonce.sousCategorie || "");
+    const [transactionType, setTransactionType] = useState(annonce.transactionType || ""); // Type de transaction
+    const [locationDuration, setLocationDuration] = useState(annonce.locationDuration || ""); // Durée de location
 
     const categories = [
         { label: "Homme", subcategories: ["T-shirts", "Pantalons", "Vestes", "Accessoires"] },
@@ -35,12 +37,16 @@ export default function AnnonceModifScreen() {
         const annonceRef = ref(db, `annonces/${annonce.id}`);
 
         update(annonceRef, {
+            photos,
             objet,
             description,
-            prix: parseFloat(prix),
-            photos,
+            //prix: parseFloat(prix),
+            prix: transactionType === "Achat" || "Location" ? prix : null, // Prix uniquement pour Achat
             categorie,
             sousCategorie,
+            transactionType,
+            locationDuration: transactionType === "Location" ? locationDuration : null, // Durée uniquement pour Location
+            dateAjout: new Date().toISOString(),
         })
             .then(() => alert("Annonce mise à jour avec succès !"))
             .catch((error) => alert("Erreur lors de la mise à jour : " + error.message));
@@ -100,19 +106,21 @@ export default function AnnonceModifScreen() {
                 onChangeText={setDescription}
                 multiline
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Prix par semaine"
-                value={prix}
-                onChangeText={setPrix}
-                keyboardType="numeric"
-            />
+            {transactionType !== 'Troc' && (
+                <TextInput
+                    style={styles.input}
+                    placeholder="Prix"
+                    value={prix}
+                    onChangeText={setPrix}
+                    keyboardType="numeric"
+                />
+            )}
             <View style={styles.pickerContainer}>
                 <Picker
                     selectedValue={categorie}
                     onValueChange={(value) => setCategorie(value)}
                 >
-                    <Picker.Item label="Sélectionner une catégorie" value="" />
+                    <Picker.Item label={""} value="" />
                     {categories.map((cat, index) => (
                         <Picker.Item key={index} label={cat.label} value={cat.label} />
                     ))}
@@ -130,6 +138,30 @@ export default function AnnonceModifScreen() {
                             ?.subcategories.map((subcat, index) => (
                                 <Picker.Item key={index} label={subcat} value={subcat} />
                             ))}
+                    </Picker>
+                </View>
+            )}
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={transactionType}
+                    onValueChange={(value) => setTransactionType(value)}
+                >
+                    <Picker.Item label="Sélectionner le type de transaction" value="" />
+                    <Picker.Item label="Troc" value="Troc" />
+                    <Picker.Item label="Achat" value="Achat" />
+                    <Picker.Item label="Location" value="Location" />
+                </Picker>
+            </View>
+            {transactionType === "Location" && (
+                <View style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={locationDuration}
+                        onValueChange={(value) => setLocationDuration(value)}
+                    >
+                        <Picker.Item label="Sélectionner la durée de location" value="" />
+                        <Picker.Item label="Par jour" value="Jour" />
+                        <Picker.Item label="Par semaine" value="Semaine" />
+                        <Picker.Item label="Par mois" value="Mois" />
                     </Picker>
                 </View>
             )}
