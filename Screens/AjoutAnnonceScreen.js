@@ -16,6 +16,9 @@ export default function AjoutAnnonceScreen() {
     const [transactionType, setTransactionType] = useState(""); // Type de transaction
     const [locationDuration, setLocationDuration] = useState(""); // Durée de location
     const [uploading, setUploading] = useState(false);
+    const [hashtags, setHashtags] = useState([]);
+    const [currentHashtag, setCurrentHashtag] = useState("");
+    
 
     const categories = [
         { label: "Homme", subcategories: ["T-shirts", "Pantalons", "Vestes", "Accessoires"] },
@@ -45,6 +48,18 @@ export default function AjoutAnnonceScreen() {
             setPhotos([...photos, ...newPhotos]);
         }
     };
+
+    const ajouterHashtag = () => {
+        if (currentHashtag.trim() && !hashtags.includes(currentHashtag.trim())) {
+            setHashtags([...hashtags, currentHashtag.trim()]);
+            setCurrentHashtag(""); // Réinitialiser l'entrée
+        }
+    };
+    
+    const supprimerHashtag = (index) => {
+        setHashtags(hashtags.filter((_, i) => i !== index));
+    };
+    
 
     const publierAnnonce = async () => {
         if (!auth.currentUser) {
@@ -91,13 +106,15 @@ export default function AjoutAnnonceScreen() {
                 photos,
                 objet,
                 description,
-                prix: transactionType === "Achat" || "Location" ? prix : null, // Prix uniquement pour Achat
+                prix: transactionType === "Achat" || "Location" ? prix : null,
                 categorie,
                 sousCategorie,
                 transactionType,
-                locationDuration: transactionType === "Location" ? locationDuration : null, // Durée uniquement pour Location
+                locationDuration: transactionType === "Location" ? locationDuration : null,
                 dateAjout: new Date().toISOString(),
+                hashtags, // Ajout des hashtags ici
             });
+            
 
             alert("Annonce publiée avec succès !");
             setPhotos([]);
@@ -145,6 +162,30 @@ export default function AjoutAnnonceScreen() {
                     onChangeText={setDescription}
                     multiline
                 />
+                <View style={styles.hashtagContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Ajouter un hashtag (#)"
+                        value={currentHashtag}
+                        onChangeText={setCurrentHashtag}
+                        onSubmitEditing={ajouterHashtag} // Ajouter le hashtag avec "Enter"
+                    />
+                    <TouchableOpacity style={styles.addButton} onPress={ajouterHashtag}>
+                        <Text style={styles.addButtonText}>Ajouter</Text>
+                    </TouchableOpacity>
+                    
+                    <View style={styles.hashtagList}>
+                        {hashtags.map((hashtag, index) => (
+                            <View key={index} style={styles.hashtagItem}>
+                                <Text style={styles.hashtagText}>{hashtag}</Text>
+                                <TouchableOpacity onPress={() => supprimerHashtag(index)}>
+                                    <Text style={styles.hashtagRemove}>✕</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </View>
+                </View>
+
                 {transactionType !== "Troc" && (
                     <TextInput
                         style={styles.input}
@@ -317,4 +358,34 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
     },
+    hashtagContainer: {
+    marginBottom: 20,
+    width: "100%",
+},
+hashtagList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 10,
+},
+hashtagItem: {
+    backgroundColor: "#f0f0f0",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 10,
+    marginBottom: 10,
+},
+hashtagText: {
+    fontSize: 14,
+    color: "#333",
+},
+hashtagRemove: {
+    marginLeft: 5,
+    color: "#ff0000",
+    fontWeight: "bold",
+},
+
 });
+

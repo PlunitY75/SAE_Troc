@@ -16,8 +16,10 @@ export default function AnnonceModifScreen() {
     const [photos, setPhotos] = useState(annonce.photos);
     const [categorie, setCategorie] = useState(annonce.categorie || "");
     const [sousCategorie, setSousCategorie] = useState(annonce.sousCategorie || "");
-    const [transactionType, setTransactionType] = useState(annonce.transactionType || ""); // Type de transaction
-    const [locationDuration, setLocationDuration] = useState(annonce.locationDuration || ""); // Durée de location
+    const [transactionType, setTransactionType] = useState(annonce.transactionType || "");
+    const [locationDuration, setLocationDuration] = useState(annonce.locationDuration || "");
+    const [hashtags, setHashtags] = useState(annonce.hashtags || []); // Ajouter les hashtags
+    const [newHashtag, setNewHashtag] = useState("");
 
     const categories = [
         { label: "Homme", subcategories: ["T-shirts", "Pantalons", "Vestes", "Accessoires"] },
@@ -51,12 +53,12 @@ export default function AnnonceModifScreen() {
             photos,
             objet,
             description,
-            //prix: parseFloat(prix),
-            prix: transactionType === "Achat" || "Location" ? prix : null, // Prix uniquement pour Achat
+            prix: transactionType === "Achat" || "Location" ? prix : null,
             categorie,
             sousCategorie,
             transactionType,
-            locationDuration: transactionType === "Location" ? locationDuration : null, // Durée uniquement pour Location
+            locationDuration: transactionType === "Location" ? locationDuration : null,
+            hashtags, // Mettre à jour les hashtags
             dateAjout: new Date().toISOString(),
         })
             .then(() => alert("Annonce mise à jour avec succès !"))
@@ -99,6 +101,18 @@ export default function AnnonceModifScreen() {
             ],
             { cancelable: true }
         );
+    };
+
+    const ajouterHashtag = () => {
+        if (newHashtag.trim() && !hashtags.includes(newHashtag)) {
+            setHashtags([...hashtags, newHashtag.trim()]);
+            setNewHashtag("");
+        }
+    };
+
+    const supprimerHashtag = (index) => {
+        const updatedHashtags = hashtags.filter((_, i) => i !== index);
+        setHashtags(updatedHashtags);
     };
 
     return (
@@ -193,6 +207,26 @@ export default function AnnonceModifScreen() {
             <TouchableOpacity style={styles.addPhotoButton} onPress={ajouterPhoto}>
                 <Text style={styles.addPhotoButtonText}>Ajouter une photo</Text>
             </TouchableOpacity>
+            <Text style={styles.subtitle}>Hashtags</Text>
+            <View style={styles.hashtagContainer}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Ajouter un hashtag"
+                    value={newHashtag}
+                    onChangeText={setNewHashtag}
+                    onSubmitEditing={ajouterHashtag}
+                />
+                <View style={styles.hashtagList}>
+                    {hashtags.map((hashtag, index) => (
+                        <View key={index} style={styles.hashtagItem}>
+                            <Text style={styles.hashtagText}>#{hashtag}</Text>
+                            <TouchableOpacity onPress={() => supprimerHashtag(index)}>
+                                <Text style={styles.hashtagRemove}>X</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ))}
+                </View>
+            </View>
             <TouchableOpacity style={styles.button} onPress={handleSave}>
                 <Text style={styles.buttonText}>Enregistrer</Text>
             </TouchableOpacity>
@@ -200,7 +234,6 @@ export default function AnnonceModifScreen() {
         </ScrollView>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -289,4 +322,36 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
     },
+    hashtagContainer: {
+    marginBottom: 20,
+    width: "100%",
+},
+hashtagContainer: {
+    marginBottom: 20,
+},
+hashtagList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+},
+hashtagItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#e9ecef",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginRight: 5,
+    marginBottom: 5,
+},
+hashtagText: {
+    fontSize: 14,
+    color: "#343a40",
+},
+hashtagRemove: {
+    fontSize: 14,
+    color: "#dc3545",
+    marginLeft: 8,
+    fontWeight: "bold",
+},
+
 });

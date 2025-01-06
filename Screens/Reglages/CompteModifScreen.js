@@ -13,6 +13,7 @@ export default function CompteModifScreen() {
     const [photo, setPhoto] = useState(null);
     const [photoBase64, setPhotoBase64] = useState(null);
     const [uploading, setUploading] = useState(false);
+    
 
     const navigation = useNavigation();
 

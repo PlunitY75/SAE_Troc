@@ -10,6 +10,7 @@ import { getDatabase, onValue, ref } from "firebase/database";
 export default function App() {
     const navigation = useNavigation();
     const [annonces, setAnnonces] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const connexionRedirection = () => {
         navigation.navigate("CompteScreen");
@@ -17,6 +18,10 @@ export default function App() {
 
     const handleAnnoncePress = (annonce) => {
         navigation.navigate('AnnonceModifScreen', { annonce });
+    };
+
+    const handleSearch = () => {
+        navigation.navigate('ResultatsRechercheScreen', { query: searchQuery });
     };
 
     const fetchTendancesAnnonces = () => {
@@ -55,7 +60,7 @@ export default function App() {
     return (
         <View style={styles.container}>
             {/* Barre de recherche */}
-            <View style={styles.topNavBarContainer}>
+           <View style={styles.topNavBarContainer}>
                 <TouchableOpacity style={styles.navBarButton} onPress={connexionRedirection}>
                     <MaterialCommunityIcons name="account" size={35} color="#687a86" />
                 </TouchableOpacity>
@@ -63,10 +68,13 @@ export default function App() {
                 <TextInput
                     placeholder="Rechercher des articles"
                     style={styles.input}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    onSubmitEditing={handleSearch}
                 />
 
-                <TouchableOpacity style={styles.navBarButton} onPress={() => console.log("touch") }>
-                    <FontAwesome5 name="shopping-cart" size={24} color="#687a86" />
+                <TouchableOpacity style={styles.navBarButton} onPress={handleSearch}>
+                    <FontAwesome5 name="search" size={24} color="#687a86" />
                 </TouchableOpacity>
             </View>
 
