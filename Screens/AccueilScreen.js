@@ -17,7 +17,7 @@ export default function App() {
     };
 
     const handleAnnoncePress = (annonce) => {
-        navigation.navigate('AnnonceModifScreen', { annonce });
+        navigation.navigate('AffichageProduitScreen', { annonce });
     };
 
     const handleSearch = () => {

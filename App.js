@@ -16,6 +16,7 @@ import LoginScreen from './Screens/Login/LoginScreen'
 import AnnonceModifScreen from './Screens/Reglages/AnnonceModifScreen';
 import CompteModifScreen from './Screens/Reglages/CompteModifScreen';
 import ResultatsRechercheScreen from './Screens/ResultatsRechercheScreen'
+import AffichageProduitScreen from "./Screens/AffichageProduitScreen";
 
 export const ConversationsContext = createContext();
 
@@ -47,6 +48,7 @@ export default function App() {
             <Stack.Screen name="AnnonceModifScreen" component={AnnonceModifScreen} options={{ title: 'Modifier votre annonce' }} />
             <Stack.Screen name="CompteModifScreen" component={CompteModifScreen} options={{ title: 'Modifier votre compte' }} />
             <Stack.Screen name="ResultatsRechercheScreen" component={ResultatsRechercheScreen} options={{ title: 'Resultat de votre Recherche' }} />
+              <Stack.Screen name="AffichageProduitScreen" component={AffichageProduitScreen} options={{ title: 'Page du Produit' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </ConversationsContext.Provider>

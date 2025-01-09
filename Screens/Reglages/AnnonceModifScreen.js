@@ -326,13 +326,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: "100%",
 },
-hashtagContainer: {
-    marginBottom: 20,
-},
-hashtagList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-},
+//
+//hashtagList: {
+//    flexDirection: "row",
+//    flexWrap: "wrap",
+//},
 hashtagItem: {
     flexDirection: "row",
     alignItems: "center",
