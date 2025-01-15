@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     cardPrice: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'green',
+        color: '#47b089',
     },
     cardDate: {
         fontSize: 10,

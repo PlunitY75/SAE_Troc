@@ -81,8 +81,8 @@ export default function AffichageProduitScreen() {
             </View>
 
             {/* Bouton pour contacter le vendeur */}
-            <TouchableOpacity 
-                style={styles.contactButton} 
+            <TouchableOpacity
+                style={styles.contactButton}
                 onPress={handleContactSeller}
                 disabled={loading} // Désactiver le bouton en cas de chargement
             >
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     productImage: {
         width: '100%',
         height: 300,
-        resizeMode: 'contain',
+        resizeMode: 'cover',
         borderRadius: 10,
         marginBottom: 20,
     },
@@ -117,7 +117,8 @@ const styles = StyleSheet.create({
     },
     productPrice: {
         fontSize: 20,
-        color: '#e91e63',
+        color: '#47b089',
+        fontWeight:500,
         marginBottom: 10,
     },
     productDescription: {

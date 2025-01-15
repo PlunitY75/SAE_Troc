@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { View, TextInput, StyleSheet, ScrollView, Text, TouchableOpacity, FlatList } from 'react-native';
+import { View, TextInput, StyleSheet, ScrollView, Text, TouchableOpacity, FlatList, RefreshControl  } from 'react-native';
 import Card from '../composants/Card.js';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -12,6 +12,13 @@ export default function App() {
     const [annonces, setAnnonces] = useState([]);
     const [searchQuery, setSearchQuery] = useState([]);
     const [electronicAnnonces, setElectronicAnnonces] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = () => {
+        setRefreshing(true); // Active l'état de rafraîchissement
+        fetchAnnonces(); // Rafraîchit les données
+        setTimeout(() => setRefreshing(false), 1000); // Désactive après 1 seconde (ou lorsque le fetch est terminé)
+    };
 
     const connexionRedirection = () => {
         navigation.navigate("CompteScreen");
@@ -88,7 +95,11 @@ export default function App() {
             </View>
 
             {/* Contenu défilant */}
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <ScrollView contentContainerStyle={styles.scrollViewContent}
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                        }
+            >
                 {/* Section "Les tendances du moment" */}
                 <View style={styles.tendanceContainer}>
                     <Text style={styles.tendanceTitle}>Les tendances du moment !</Text>
@@ -116,57 +127,61 @@ export default function App() {
                     />
                 </View>
 
-                
-                {/* Section "Appareil électronique" */}
-                <Text style={styles.tendanceTitle}>Appareil électronique :</Text>
-                <FlatList
-                    data={electronicAnnonces}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
-                            <Card
-                                imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                                title={item.objet || 'Titre indisponible'}
-                                description={item.description || 'Pas de description'}
-                                price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
-                                date={item.dateAjout
-                                    ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                    : 'Date inconnue'
-                                }
-                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
-                            />
-                        </TouchableOpacity>
-                    )}
-                    keyExtractor={(item) => item.id}
-                    horizontal={true}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.carrousel}
-                />
-                {/* Section "Toutes les annonces" */}
-                <Text style={styles.tendanceTitle}>Toutes les annonces :</Text>
-                <FlatList
-                    data={annonces}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
-                            <Card
-                                imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                                title={item.objet || 'Titre indisponible'}
-                                description={item.description || 'Pas de description'}
-                                price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
-                                date={item.dateAjout
-                                    ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                    : 'Date inconnue'
-                                }
-                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
-                            />
-                        </TouchableOpacity>
-                    )}
-                    keyExtractor={(item) => item.id}
-                    horizontal={true}  // Afficher les annonces en carrousel horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.carrousel}
-                />
 
+                {/* Section "Appareil électronique" */}
+                <View style={styles.appareilContainer}>
+                    <Text style={styles.appareilTitle}>Appareil électronique :</Text>
+                    <FlatList style={styles.appareilContainer}
+                        data={electronicAnnonces}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                                <Card
+                                    imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                    title={item.objet || 'Titre indisponible'}
+                                    description={item.description || 'Pas de description'}
+                                    price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                    date={item.dateAjout
+                                        ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                        : 'Date inconnue'
+                                    }
+                                    tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                                />
+                            </TouchableOpacity>
+                        )}
+                        keyExtractor={(item) => item.id}
+                        horizontal={true}
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.carrousel}
+                    />
+                </View>
+                {/* Section "Toutes les annonces" */}
+                <View style={styles.appareilContainer}>
+                    <Text style={styles.annonceTitle}>Toutes les annonces :</Text>
+                    <FlatList
+                        data={annonces}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                                <Card
+                                    imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                    title={item.objet || 'Titre indisponible'}
+                                    description={item.description || 'Pas de description'}
+                                    price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                    date={item.dateAjout
+                                        ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                        : 'Date inconnue'
+                                    }
+                                    tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                                />
+                            </TouchableOpacity>
+                        )}
+                        keyExtractor={(item) => item.id}
+                        horizontal={true}  // Afficher les annonces en carrousel horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.carrousel}
+                    />
+                </View>
             </ScrollView>
+
         </View>
     );
 }
@@ -196,7 +211,8 @@ const styles = StyleSheet.create({
     input: {
         backgroundColor: '#fff',
         padding: 10,
-        borderRadius: 20,
+        height:50,
+        borderRadius: 15,
         borderWidth: 1,
         flex: 1,
         marginRight: 15,
@@ -209,10 +225,12 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         paddingTop: 20,
         paddingBottom: 15,
+        backgroundColor:'white'
     },
     tendanceTitle: {
         fontSize: 24,
         fontWeight: '700',
+        marginTop:0,
         marginLeft: 15,
         marginBottom: 15,
         color: '#47b089',  // Vert pour attirer l'attention
@@ -221,7 +239,27 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
         paddingRight: 10,
     },
-    scrollViewContent: {},
+
+    appareilContainer: {
+        backgroundColor:'white',
+        marginTop:20,
+    },
+    appareilTitle:{
+        fontSize: 24,
+        fontWeight: '700',
+        marginTop:20,
+        marginLeft: 15,
+        color: '#47b089',  // Vert pour attirer l'attention
+    },
+
+    annonceTitle:{
+        fontSize: 24,
+        fontWeight: '700',
+        marginTop:20,
+        marginLeft: 15,
+        color: '#47b089',  // Vert pour attirer l'attention
+        marginBottom:15,
+    },
     flatListContent: {
         paddingBottom: 20,
         paddingHorizontal: 10,
