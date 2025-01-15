@@ -10,7 +10,8 @@ import { getDatabase, onValue, ref } from "firebase/database";
 export default function App() {
     const navigation = useNavigation();
     const [annonces, setAnnonces] = useState([]);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState([]);
+    const [electronicAnnonces, setElectronicAnnonces] = useState([]);
 
     const connexionRedirection = () => {
         navigation.navigate("CompteScreen");
@@ -24,7 +25,7 @@ export default function App() {
         navigation.navigate('ResultatsRechercheScreen', { query: searchQuery });
     };
 
-    const fetchTendancesAnnonces = () => {
+    const fetchAnnonces = () => {
         const db = getDatabase();
         const annoncesRef = ref(db, `annonces`);
 
@@ -49,20 +50,26 @@ export default function App() {
                 const recentAnnonces = sortedAnnonces.slice(0, 10);
 
                 setAnnonces(recentAnnonces);
+
+                // Filtrer les annonces de la catégorie Electronique
+                const electronic = allAnnonces.filter(annonce => annonce.categorie === "Électronique");
+
+                setElectronicAnnonces(electronic);
             } else {
                 setAnnonces([]);
+                setElectronicAnnonces([]);
             }
         });
     };
 
     useEffect(() => {
-        fetchTendancesAnnonces();
+        fetchAnnonces();
     }, []);
 
     return (
         <View style={styles.container}>
             {/* Barre de recherche */}
-           <View style={styles.topNavBarContainer}>
+            <View style={styles.topNavBarContainer}>
                 <TouchableOpacity style={styles.navBarButton} onPress={connexionRedirection}>
                     <MaterialCommunityIcons name="account" size={35} color="#687a86" />
                 </TouchableOpacity>
@@ -82,6 +89,7 @@ export default function App() {
 
             {/* Contenu défilant */}
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                {/* Section "Les tendances du moment" */}
                 <View style={styles.tendanceContainer}>
                     <Text style={styles.tendanceTitle}>Les tendances du moment !</Text>
                     <FlatList
@@ -108,12 +116,56 @@ export default function App() {
                     />
                 </View>
 
-                {/* Articles supplémentaires */}
-                {Array.from({ length: 20 }, (_, i) => (
-                    <Text key={i} style={styles.item}>
-                        Article {i + 1}
-                    </Text>
-                ))}
+                
+                {/* Section "Appareil électronique" */}
+                <Text style={styles.tendanceTitle}>Appareil électronique :</Text>
+                <FlatList
+                    data={electronicAnnonces}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                            <Card
+                                imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                title={item.objet || 'Titre indisponible'}
+                                description={item.description || 'Pas de description'}
+                                price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                date={item.dateAjout
+                                    ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                    : 'Date inconnue'
+                                }
+                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                            />
+                        </TouchableOpacity>
+                    )}
+                    keyExtractor={(item) => item.id}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.carrousel}
+                />
+                {/* Section "Toutes les annonces" */}
+                <Text style={styles.tendanceTitle}>Toutes les annonces :</Text>
+                <FlatList
+                    data={annonces}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                            <Card
+                                imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                title={item.objet || 'Titre indisponible'}
+                                description={item.description || 'Pas de description'}
+                                price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                date={item.dateAjout
+                                    ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                    : 'Date inconnue'
+                                }
+                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                            />
+                        </TouchableOpacity>
+                    )}
+                    keyExtractor={(item) => item.id}
+                    horizontal={true}  // Afficher les annonces en carrousel horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.carrousel}
+                />
+
             </ScrollView>
         </View>
     );
@@ -122,19 +174,19 @@ export default function App() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ddd'
+        backgroundColor: '#f5f5f5',
     },
     topNavBarContainer: {
-        backgroundColor: '#f5f5f5',
-        padding: 10,
+        backgroundColor: '#fff',
+        padding: 15,
         flexDirection: 'row',
-        justifyContent: 'space-evenly',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
-        zIndex: 1,
     },
     navBarButton: {
-        backgroundColor: '#ddd',
+        backgroundColor: '#f5f5f5',
         alignItems: 'center',
         justifyContent: 'center',
         width: 50,
@@ -144,34 +196,38 @@ const styles = StyleSheet.create({
     input: {
         backgroundColor: '#fff',
         padding: 10,
-        borderRadius: 15,
+        borderRadius: 20,
         borderWidth: 1,
         flex: 1,
-        marginRight: 10,
+        marginRight: 15,
         marginLeft: 10,
         borderColor: '#ddd',
+        fontSize: 16,
     },
     tendanceContainer: {
         width: '100%',
         flexDirection: 'column',
-        paddingTop: 30,
-        paddingBottom: 20,
-        backgroundColor: '#f5f5f5',
+        paddingTop: 20,
+        paddingBottom: 15,
     },
     tendanceTitle: {
-        fontSize: 20,
-        fontWeight: '500',
-        marginLeft: 10,
-        marginBottom: 15
+        fontSize: 24,
+        fontWeight: '700',
+        marginLeft: 15,
+        marginBottom: 15,
+        color: '#2e7d32',  // Vert pour attirer l'attention
     },
     carrousel: {
         paddingLeft: 10,
         paddingRight: 10,
     },
     scrollViewContent: {},
-    item: {
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
+    flatListContent: {
+        paddingBottom: 20,
+        paddingHorizontal: 10,
+    },
+    cardWrapper: {
+        flex: 1,
+        marginRight: 10,
     },
 });

@@ -50,7 +50,8 @@ export default function App() {
             <Stack.Screen name="CompteModifScreen" component={CompteModifScreen} options={{ title: 'Modifier votre compte' }} />
             <Stack.Screen name="ResultatsRechercheScreen" component={ResultatsRechercheScreen} options={{ title: 'Resultat de votre Recherche' }} />
               <Stack.Screen name="AffichageProduitScreen" component={AffichageProduitScreen} options={{ title: 'Page du Produit' }} />
-              <Stack.Screen name="ConvTestScreen" component={ConvTestScreen} options={{ title: 'ConvTest' }} />
+              <Stack.Screen name="ConvTestScreen" component={ConvTestScreen} options={{ title: 'Conversation' }} />
+              <Stack.Screen name="CompteScreen" component={CompteScreen} options={{ title: 'Mon Compte' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </ConversationsContext.Provider>

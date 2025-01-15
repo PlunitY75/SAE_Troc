@@ -41,7 +41,7 @@ export default function ResultatsRechercheScreen({ route, navigation }) {
                     data={results}
                     renderItem={({ item }) => (
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('AffichageClientScreen', { annonce: item })}
+                            onPress={() => navigation.navigate('AffichageProduitScreen', { annonce: item })}
                             style={styles.cardWrapper}
                         >
                             <Card
