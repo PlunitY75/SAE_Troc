@@ -19,7 +19,7 @@ export default function LoginScreen() {
     const handleLogin = async () => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            alert("Connexion réussie !!!!");
+
             // Redirigez ou effectuez une action après la connexion
             navigation.navigate('Home');
             

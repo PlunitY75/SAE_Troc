@@ -1,6 +1,7 @@
 import firebase from "firebase/compat";
 import 'firebase/auth';
 import 'firebase/compat/database';
+import 'firebase/firestore';  // Importer Firestore pour l'utiliser
 
 
 // ... (importez d'autres modules Firebase dont vous avez besoin)
@@ -30,9 +31,11 @@ if (firebase.apps.length === 0) {
 // Initialisation des services d'authentification et de base de données
 const auth = firebase.auth();
 const database = firebase.database();
+// Exporter Firestore pour pouvoir l'utiliser dans toute l'application
+const firestore = firebase.firestore();
 
 // Configuration de l'authentification Google
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 // Exportation des services pour une utilisation dans d'autres fichiers
-export { auth, database, googleProvider };
+export { auth, database, googleProvider, firestore };

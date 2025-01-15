@@ -37,8 +37,11 @@ export default function App() {
                     ...data[id],
                 }));
 
+                // Filtrer les annonces pour exclure celles avec notAvailable === true
+                const filteredAnnonces = allAnnonces.filter((annonce) => !annonce.notAvailable);
+
                 // Trie les annonces par date décroissante
-                const sortedAnnonces = allAnnonces.sort((a, b) =>
+                const sortedAnnonces = filteredAnnonces.sort((a, b) =>
                     new Date(b.dateAjout) - new Date(a.dateAjout)
                 );
 
@@ -51,7 +54,6 @@ export default function App() {
             }
         });
     };
-
 
     useEffect(() => {
         fetchTendancesAnnonces();
@@ -91,12 +93,10 @@ export default function App() {
                                     title={item.objet || 'Titre indisponible'}
                                     description={item.description || 'Pas de description'}
                                     price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
-                                    date={
-                                        item.dateAjout
-                                            ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                            : 'Date inconnue'
+                                    date={item.dateAjout
+                                        ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                        : 'Date inconnue'
                                     }
-
                                     tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
                                 />
                             </TouchableOpacity>

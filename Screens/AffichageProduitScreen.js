@@ -1,13 +1,55 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { firestore, auth } from '../Firebase';  // Assurez-vous d'importer Firebase et auth correctement
 
 export default function AffichageProduitScreen() {
     const route = useRoute();
+    const navigation = useNavigation();
     const { annonce } = route.params; // Récupère l'annonce passée depuis la page précédente
+    const [loading, setLoading] = useState(false);
 
-    const handleContactSeller = () => {
-        alert(`Contactez le vendeur de l'article: ${annonce.objet}`);
+    const handleContactSeller = async () => {
+        setLoading(true);
+
+        try {
+            // Récupérer l'ID du vendeur depuis l'annonce
+            const sellerId = annonce.userId;
+            const user = auth.currentUser; // Utilisation correcte de auth
+            if (!user) {
+                alert("Vous devez être connecté pour contacter le vendeur");
+                return;
+            }
+
+            // Vérifier si une conversation existe déjà avec le même annonceId et les deux participants
+            const existingConversationSnapshot = await firestore
+                .collection('conversations')
+                .where('annonceId', '==', annonce.id)
+                .where('participants', 'array-contains', user.uid)
+                .get();
+
+            if (!existingConversationSnapshot.empty) {
+                // Si une conversation existe, ouvrir la conversation existante
+                const existingConversationId = existingConversationSnapshot.docs[0].id;
+                navigation.navigate('ConvTestScreen', { conversationId: existingConversationId });
+            } else {
+                // Sinon, créer une nouvelle conversation
+                const conversationRef = firestore.collection('conversations').doc();
+                await conversationRef.set({
+                    participants: [sellerId, user.uid], // Remplacer 'currentUserId' par l'ID de l'utilisateur connecté
+                    createdAt: new Date(),
+                    annonceId: annonce.id, // Ajouter l'ID de l'annonce à la conversation
+                });
+
+                // Une fois la conversation créée, naviguer vers la page de chat avec l'ID de la conversation
+                navigation.navigate('ConvTestScreen', { conversationId: conversationRef.id });
+            }
+
+        } catch (error) {
+            console.error("Erreur lors de la création ou de la récupération de la conversation:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -39,8 +81,14 @@ export default function AffichageProduitScreen() {
             </View>
 
             {/* Bouton pour contacter le vendeur */}
-            <TouchableOpacity style={styles.contactButton} onPress={handleContactSeller}>
-                <Text style={styles.contactButtonText}>Contacter le vendeur</Text>
+            <TouchableOpacity 
+                style={styles.contactButton} 
+                onPress={handleContactSeller}
+                disabled={loading} // Désactiver le bouton en cas de chargement
+            >
+                <Text style={styles.contactButtonText}>
+                    {loading ? 'Chargement...' : 'Contacter le vendeur'}
+                </Text>
             </TouchableOpacity>
         </ScrollView>
     );
