@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     },
     userMessage: {
         alignSelf: 'flex-end',
-        backgroundColor: '#4CAF50',  // Vert pour l'utilisateur
+        backgroundColor: '#47b089',  // Vert pour l'utilisateur
         borderRadius: 10,
         padding: 10,
         marginBottom: 10,
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     },
     textInput: {
         borderWidth: 1,
-        borderColor: '#4CAF50',
+        borderColor: '#47b089',
         borderRadius: 20,
         paddingHorizontal: 15,
         paddingVertical: 10,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     sendButton: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#47b089',
         paddingVertical: 12,
         borderRadius: 30,
         alignItems: 'center',
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     payButton: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#47b089',
         paddingVertical: 12,
         borderRadius: 30,
         marginTop: 10,

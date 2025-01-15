@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
     },
     topNavBarContainer: {
-        backgroundColor: '#fff',
+        backgroundColor: '#47b089',
         padding: 15,
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         marginLeft: 15,
         marginBottom: 15,
-        color: '#2e7d32',  // Vert pour attirer l'attention
+        color: '#47b089',  // Vert pour attirer l'attention
     },
     carrousel: {
         paddingLeft: 10,

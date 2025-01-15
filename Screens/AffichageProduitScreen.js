@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     contactButton: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: '#47b089',
         paddingVertical: 15,
         borderRadius: 5,
         alignItems: 'center',

@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
         textAlignVertical: "top",
     },
     addButton: {
-        backgroundColor: "#007BFF",
+        backgroundColor: "#47b089",
         padding: 15,
         borderRadius: 8,
         marginBottom: 20,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     publishButton: {
-        backgroundColor: "#28A745",
+        backgroundColor: "#47b089",
         padding: 15,
         borderRadius: 8,
         width: "100%",

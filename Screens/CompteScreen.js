@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
         color: "#343a40",
     },
     button: {
-        backgroundColor: "#007bff",
+        backgroundColor: "#47b089",
         paddingVertical: 15,
         paddingHorizontal: 30,
         borderRadius: 25,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         marginBottom: 15,
         borderWidth: 2,
-        borderColor: "#007bff",
+        borderColor: "#47b089",
     },
     profileName: {
         fontSize: 24,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     actionButton: {
-        backgroundColor: "#007bff",
+        backgroundColor: "#47b089",
         paddingVertical: 15,
         paddingHorizontal: 20,
         borderRadius: 25,

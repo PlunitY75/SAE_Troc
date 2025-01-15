@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f7f9fc',
   },
   header: {
-    backgroundColor: '#0078fe',
+    backgroundColor: '#47b089',
     padding: 15,
     alignItems: 'center',
   },
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   myMessage: {
-    backgroundColor: '#0078fe',
+    backgroundColor: '#47b089',
     alignSelf: 'flex-end',
   },
   otherMessage: {
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
   },
   sendButton: {
-    backgroundColor: '#0078fe',
+    backgroundColor: '#47b089',
     marginLeft: 10,
     paddingHorizontal: 20,
     paddingVertical: 10,
