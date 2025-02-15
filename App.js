@@ -32,10 +32,9 @@ export default function App() {
       { id: '3', name: 'Eric Zhang', messages: [{ id: '1', text: 'On peut discuter du troc ?', sender: 'other' }] },
       { id: '4', name: 'Youssef Bakli', messages: [{ id: '1', text: 'Top ! Merci beaucoup.', sender: 'other' }] },
       { id: '5', name: 'Lucas Nurminen', messages: [{ id: '1', text: 'Une casquette de dispo ?', sender: 'other' }] },
-    ]); // Ajouté pour gérer dynamiquement les messages de chaque conversation
+    ]);
   
     return (
-      // Envelopper l'application dans ConversationsContext.Provider pour partager les conversations
       <ConversationsContext.Provider value={{ conversations, setConversations }}>
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: true }}>
