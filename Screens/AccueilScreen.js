@@ -1,11 +1,26 @@
 import { StatusBar } from "expo-status-bar";
-import { View, TextInput, StyleSheet, ScrollView, Text, TouchableOpacity, FlatList, RefreshControl  } from 'react-native';
+import {
+    View,
+    TextInput,
+    StyleSheet,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    FlatList,
+    RefreshControl,
+    Platform,
+    Image, ImageBackground
+} from 'react-native';
 import Card from '../composants/Card.js';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useNavigation } from "@react-navigation/native";
 import { useState, useEffect } from 'react';
 import { getDatabase, onValue, ref } from "firebase/database";
+import { useFonts } from 'expo-font';
+import Footer from "../composants/Footer";
+import NavBar from "../composants/NavBar";
+
 
 export default function App() {
     const navigation = useNavigation();
@@ -13,6 +28,11 @@ export default function App() {
     const [searchQuery, setSearchQuery] = useState([]);
     const [electronicAnnonces, setElectronicAnnonces] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
+    const isWeb = Platform.OS === 'web';
+
+    const [fontsLoaded] = useFonts({
+        'AnotherShabby': require('../assets/anothershabby.ttf'),
+    });
 
     const onRefresh = () => {
         setRefreshing(true); // Active l'état de rafraîchissement
@@ -77,6 +97,11 @@ export default function App() {
         <View style={styles.container}>
             {/* Barre de recherche */}
             <View style={styles.topNavBarContainer}>
+                {isWeb && (
+                    <Text onPress={() => navigation.navigate('PageAccueil')}>
+                        <Text style={styles.appName}>Troc.Co</Text>
+                    </Text>
+                )}
                 <TouchableOpacity style={styles.navBarButton} onPress={connexionRedirection}>
                     <MaterialCommunityIcons name="account" size={35} color="#687a86" />
                 </TouchableOpacity>
@@ -92,14 +117,43 @@ export default function App() {
                 <TouchableOpacity style={styles.navBarButton} onPress={handleSearch}>
                     <FontAwesome5 name="search" size={24} color="#687a86" />
                 </TouchableOpacity>
-            </View>
 
+                {/* Boutons "S'inscrire" et "Se connecter" */}
+                <TouchableOpacity style={styles.authButton} onPress={() => navigation.navigate('RegisterScreen')}>
+                    <Text style={[styles.authButtonText, {color: 'black'}]}>S'inscrire</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.authButton, {backgroundColor: '#47b089'}]} onPress={() => navigation.navigate('LoginScreen')}>
+                    <Text style={[styles.authButtonText, {color: 'white'}]}>Se connecter</Text>
+                </TouchableOpacity>
+
+            </View>
+            <NavBar/>
             {/* Contenu défilant */}
+
             <ScrollView contentContainerStyle={styles.scrollViewContent}
                         refreshControl={
                             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                         }
             >
+                {isWeb && (
+                    <ImageBackground
+                        source={require('../assets/img4.jpg')}
+                        style={styles.backgroundImage}
+                    >
+                        <View style={{ backgroundColor: 'white',marginLeft: 100,padding:20 ,justifyContent: 'center', alignItems: 'flex-start', paddingLeft: 20, borderRadius: 7}}>
+                            <Text style={styles.textOnBackground}>
+                                <Text style={{color: 'black', fontWeight: 500}}>Sur </Text>
+                                <Text style={{color: "#47b089", fontWeight: 700}}>Troc&Co</Text>
+                                <Text style={{color: 'black', fontWeight: 500}}> vous pouvez{'\n'}Vendre{'\n'}Louer{'\n'}et </Text>
+                                <Text style={{color: "#47b089", fontWeight: 700}}>Troquer !</Text>
+                            </Text>
+
+                        </View>
+                    </ImageBackground>
+
+
+                )}
                 {/* Section "Les tendances du moment" */}
                 <View style={styles.tendanceContainer}>
                     <Text style={styles.tendanceTitle}>Les tendances du moment !</Text>
@@ -155,7 +209,7 @@ export default function App() {
                     />
                 </View>
                 {/* Section "Toutes les annonces" */}
-                <View style={styles.appareilContainer}>
+                <View style={[styles.appareilContainer, {paddingBottom: 20}]}>
                     <Text style={styles.annonceTitle}>Toutes les annonces :</Text>
                     <FlatList
                         data={annonces}
@@ -180,6 +234,9 @@ export default function App() {
                         contentContainerStyle={styles.carrousel}
                     />
                 </View>
+                {isWeb && (
+                    <Footer />
+                )}
             </ScrollView>
 
         </View>
@@ -192,10 +249,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
     },
     topNavBarContainer: {
-        backgroundColor: '#47b089',
+        backgroundColor: Platform.OS === 'web' ? 'white' : '#47b089',
         padding: 15,
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: Platform.OS === 'web' ? 'center' : 'space-between',
         alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
@@ -207,12 +264,37 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 15,
+        display: Platform.OS === 'web' ? 'none' : 'flex'
+    },
+    authButton: {
+        height: 35,
+        borderRadius: 5,
+        padding: 10,
+        marginLeft: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        display: Platform.OS === 'web' ? 'flex' : 'none',
+        borderWidth: 1,
+        borderColor: '#ddd',
+    },
+    appName: {
+        fontSize: 30,
+        fontWeight: 'bold',
+        color: '#47b089',
+        marginRight: 10,
+        fontFamily: 'AnotherShabby',
+    },
+    authButtonText: {
+        fontSize: 16,
+        color: '#687a86',
     },
     input: {
-        backgroundColor: '#fff',
+        backgroundColor: Platform.OS === 'web' ? '#e4ecf1' : '#fff',
         padding: 10,
         height:50,
-        borderRadius: 15,
+        maxWidth: Platform.OS === 'web' ? '40%' : 'none',
+        maxHeight: Platform.OS === 'web' ? 40 : 'none',
+        borderRadius: Platform.OS === 'web' ? 10: 15,
         borderWidth: 1,
         flex: 1,
         marginRight: 15,
@@ -220,20 +302,29 @@ const styles = StyleSheet.create({
         borderColor: '#ddd',
         fontSize: 16,
     },
+    backgroundImage: {
+        width: '100%',
+        height: 500,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        paddingLeft: 20,
+        resizeMode: 'contain',
+    },
+    textOnBackground: {
+        color: '#47b089',
+        fontSize: 22,
+    },
     tendanceContainer: {
         width: '100%',
         flexDirection: 'column',
-        paddingTop: 20,
-        paddingBottom: 15,
+        paddingBottom: Platform.OS === 'web' ? 20 : 0,
         backgroundColor:'white'
     },
     tendanceTitle: {
         fontSize: 24,
         fontWeight: '700',
-        marginTop:0,
-        marginLeft: 15,
-        marginBottom: 15,
-        color: '#47b089',  // Vert pour attirer l'attention
+        margin: 15,
+        color: '#47b089',
     },
     carrousel: {
         paddingLeft: 10,
@@ -243,12 +334,14 @@ const styles = StyleSheet.create({
     appareilContainer: {
         backgroundColor:'white',
         marginTop:20,
+        paddingBottom: Platform.OS === 'web' ? 10 : 0,
     },
     appareilTitle:{
         fontSize: 24,
         fontWeight: '700',
         marginTop:20,
         marginLeft: 15,
+        marginBottom:0,
         color: '#47b089',  // Vert pour attirer l'attention
     },
 
