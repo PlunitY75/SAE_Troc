@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TouchableOpacity, TextInput } from "react-native";
+import {StyleSheet, Text, View, TouchableOpacity, TextInput, Platform} from "react-native";
 import { useState } from "react";
 import { auth } from "../../Firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -52,7 +52,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
             <Text style={styles.footerText}>
                 Vous n'avez pas encore de compte ?{" "}
-                <Text style={styles.link} onPress={() => registerRedirection}>
+                <Text style={styles.link} onPress={registerRedirection}>
                     Inscrivez-vous
                 </Text>
             </Text>
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     input: {
-        width: "100%",
+        width: Platform.OS === 'web' ? '20%' : '100%',
         height: 50,
         borderColor: "#ccc",
         borderWidth: 1,
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     button: {
-        width: "100%",
+        width: Platform.OS === 'web' ? '20%' : '100%',
         height: 50,
         backgroundColor: "#47b089",
         borderRadius: 8,

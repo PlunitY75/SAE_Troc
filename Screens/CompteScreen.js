@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList } from "react-native";
+import {StyleSheet, Text, View, TouchableOpacity, Image, FlatList, Platform} from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from "react";
 import { auth } from "../Firebase";
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30,
         borderRadius: 25,
         marginBottom: 20,
-        width: '80%',
+        width: Platform.OS === 'web' ? '20%' : '80%',
         alignItems: 'center',
     },
     buttonText: {
@@ -202,6 +202,7 @@ const styles = StyleSheet.create({
     },
     actionsContainer: {
         marginTop: 20,
+        alignItems:Platform.OS === 'web' ? 'center' : 'none',
     },
     actionButton: {
         backgroundColor: "#47b089",
@@ -210,6 +211,7 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         marginBottom: 15,
         alignItems: "center",
+        width: Platform.OS === 'web' ? '20%' : '100%',
     },
     actionText: {
         color: "#fff",

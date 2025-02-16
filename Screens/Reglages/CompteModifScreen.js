@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, Image } from "react-native";
+import {StyleSheet, Text, View, TouchableOpacity, TextInput, Image, Platform} from "react-native";
 import { useState, useEffect } from "react";
 import { auth } from "../../Firebase";
 import { getDatabase, ref, onValue, update } from "firebase/database";
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     input: {
-        width: "100%",
+        width: Platform.OS === 'web' ? '20%' : '100%',
         height: 50,
         borderColor: "#ccc",
         borderWidth: 1,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
         height: "100%",
     },
     button: {
-        width: "100%",
+        width: Platform.OS === 'web' ? '20%' : '100%',
         height: 50,
         backgroundColor: "#47b089",
         borderRadius: 8,

@@ -1,4 +1,4 @@
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import {View, Text, FlatList, StyleSheet, TouchableOpacity, Platform} from 'react-native';
 import Card from '../composants/Card.js';
 import { useEffect, useState } from 'react';
 import { getDatabase, onValue, ref } from "firebase/database";
@@ -60,7 +60,7 @@ export default function ResultatsRechercheScreen({ route, navigation }) {
                     )}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
-                    numColumns={2} // Deux colonnes pour afficher deux annonces par ligne
+                    numColumns={Platform.OS === 'web' ? 7 : 2} // Deux colonnes pour afficher deux annonces par ligne
                 />
             )}
         </View>
@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingBottom: 20,
+        width:Platform.OS === 'web' ? 420 : 'none',
     },
     cardWrapper: {
         flex: 1,

@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, ScrollView, Alert } from "react-native";
+import {StyleSheet, Text, View, TextInput, TouchableOpacity, Image, ScrollView, Alert, Platform} from "react-native";
 import { Picker } from "@react-native-picker/picker"; // Assurez-vous d'avoir installé ce package
 import { useRoute } from "@react-navigation/native";
 import { useState } from "react";
@@ -117,120 +117,123 @@ export default function AnnonceModifScreen() {
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={styles.title}>Modifier l'annonce</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Objet"
-                value={objet}
-                onChangeText={setObjet}
-            />
-            <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Description"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-            />
-            {transactionType !== "Troc" && (
+            <View style={{alignItems:Platform.OS === 'web' ? 'center' : 'none'}}>
+                <Text style={styles.title}>Modifier l'annonce</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Prix"
-                    value={prix}
-                    onChangeText={setPrix}
-                    keyboardType="numeric"
+                    placeholder="Objet"
+                    value={objet}
+                    onChangeText={setObjet}
                 />
-            )}
-            <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={categorie}
-                    onValueChange={(value) => setCategorie(value)}
-                >
-                    <Picker.Item label={""} value="" />
-                    {categories.map((cat, index) => (
-                        <Picker.Item key={index} label={cat.label} value={cat.label} />
-                    ))}
-                </Picker>
-            </View>
-            {categorie && (
+                <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Description"
+                    value={description}
+                    onChangeText={setDescription}
+                    multiline
+                />
+                {transactionType !== "Troc" && (
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Prix"
+                        value={prix}
+                        onChangeText={setPrix}
+                        keyboardType="numeric"
+                    />
+                )}
                 <View style={styles.pickerContainer}>
                     <Picker
-                        selectedValue={sousCategorie}
-                        onValueChange={(value) => setSousCategorie(value)}
+                        selectedValue={categorie}
+                        onValueChange={(value) => setCategorie(value)}
                     >
-                        {categories
-                            .find((cat) => cat.label === categorie)
-                            ?.subcategories.map((subcat, index) => (
-                                <Picker.Item key={index} label={subcat} value={subcat} />
-                            ))}
+                        <Picker.Item label={""} value="" />
+                        {categories.map((cat, index) => (
+                            <Picker.Item key={index} label={cat.label} value={cat.label} />
+                        ))}
                     </Picker>
                 </View>
-            )}
-            <View style={styles.pickerContainer}>
-                <Picker
-                    selectedValue={transactionType}
-                    onValueChange={(value) => setTransactionType(value)}
-                >
-                    <Picker.Item label="Troc" value="Troc" />
-                    <Picker.Item label="Achat" value="Achat" />
-                    <Picker.Item label="Location" value="Location" />
-                </Picker>
-            </View>
-            {transactionType === "Location" && (
-                <View style={styles.pickerContainer}>
-                    <Picker
-                        selectedValue={locationDuration}
-                        onValueChange={(value) => setLocationDuration(value)}
-                    >
-                        <Picker.Item label="Par jour" value="Jour" />
-                        <Picker.Item label="Par semaine" value="Semaine" />
-                        <Picker.Item label="Par mois" value="Mois" />
-                    </Picker>
-                </View>
-            )}
-            <Text style={styles.subtitle}>Photos</Text>
-            <ScrollView horizontal style={styles.photosContainer}>
-                {photos.map((photo, index) => (
-                    <View key={index} style={styles.photoWrapper}>
-                        <Image
-                            source={{ uri: `data:image/png;base64,${photo}` }}
-                            style={styles.photo}
-                        />
-                        <TouchableOpacity
-                            style={styles.deleteButton}
-                            onPress={() => supprimerPhoto(index)}
+                {categorie && (
+                    <View style={styles.pickerContainer}>
+                        <Picker
+                            selectedValue={sousCategorie}
+                            onValueChange={(value) => setSousCategorie(value)}
                         >
-                            <Text style={styles.deleteButtonText}>X</Text>
-                        </TouchableOpacity>
+                            {categories
+                                .find((cat) => cat.label === categorie)
+                                ?.subcategories.map((subcat, index) => (
+                                    <Picker.Item key={index} label={subcat} value={subcat} />
+                                ))}
+                        </Picker>
                     </View>
-                ))}
-            </ScrollView>
-            <TouchableOpacity style={styles.addPhotoButton} onPress={ajouterPhoto}>
-                <Text style={styles.addPhotoButtonText}>Ajouter une photo</Text>
-            </TouchableOpacity>
-            <Text style={styles.subtitle}>Hashtags</Text>
-            <View style={styles.hashtagContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Ajouter un hashtag"
-                    value={newHashtag}
-                    onChangeText={setNewHashtag}
-                    onSubmitEditing={ajouterHashtag}
-                />
-                <View style={styles.hashtagList}>
-                    {hashtags.map((hashtag, index) => (
-                        <View key={index} style={styles.hashtagItem}>
-                            <Text style={styles.hashtagText}>#{hashtag}</Text>
-                            <TouchableOpacity onPress={() => supprimerHashtag(index)}>
-                                <Text style={styles.hashtagRemove}>X</Text>
+                )}
+                <View style={styles.pickerContainer}>
+                    <Picker
+                        selectedValue={transactionType}
+                        onValueChange={(value) => setTransactionType(value)}
+                    >
+                        <Picker.Item label="Troc" value="Troc" />
+                        <Picker.Item label="Achat" value="Achat" />
+                        <Picker.Item label="Location" value="Location" />
+                    </Picker>
+                </View>
+                {transactionType === "Location" && (
+                    <View style={styles.pickerContainer}>
+                        <Picker
+                            selectedValue={locationDuration}
+                            onValueChange={(value) => setLocationDuration(value)}
+                        >
+                            <Picker.Item label="Par jour" value="Jour" />
+                            <Picker.Item label="Par semaine" value="Semaine" />
+                            <Picker.Item label="Par mois" value="Mois" />
+                        </Picker>
+                    </View>
+                )}
+                <Text style={styles.subtitle}>Photos</Text>
+                <ScrollView horizontal style={styles.photosContainer}>
+                    {photos.map((photo, index) => (
+                        <View key={index} style={styles.photoWrapper}>
+                            <Image
+                                source={{ uri: `data:image/png;base64,${photo}` }}
+                                style={styles.photo}
+                            />
+                            <TouchableOpacity
+                                style={styles.deleteButton}
+                                onPress={() => supprimerPhoto(index)}
+                            >
+                                <Text style={styles.deleteButtonText}>X</Text>
                             </TouchableOpacity>
                         </View>
                     ))}
+                </ScrollView>
+                <TouchableOpacity style={styles.addPhotoButton} onPress={ajouterPhoto}>
+                    <Text style={styles.addPhotoButtonText}>Ajouter une photo</Text>
+                </TouchableOpacity>
+                <Text style={styles.subtitle}>Hashtags</Text>
+                <View style={styles.hashtagContainer}>
+                    <TextInput
+                        style={[styles.input, {width: '100%'}]}
+                        placeholder="Ajouter un hashtag"
+                        value={newHashtag}
+                        onChangeText={setNewHashtag}
+                        onSubmitEditing={ajouterHashtag}
+                    />
+                    <View style={styles.hashtagList}>
+                        {hashtags.map((hashtag, index) => (
+                            <View key={index} style={styles.hashtagItem}>
+                                <Text style={styles.hashtagText}>#{hashtag}</Text>
+                                <TouchableOpacity onPress={() => supprimerHashtag(index)}>
+                                    <Text style={styles.hashtagRemove}>X</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ))}
+                    </View>
                 </View>
+                <TouchableOpacity style={styles.button} onPress={handleSave}>
+                    <Text style={styles.buttonText}>Enregistrer</Text>
+                </TouchableOpacity>
+                <StatusBar style="auto" />
             </View>
-            <TouchableOpacity style={styles.button} onPress={handleSave}>
-                <Text style={styles.buttonText}>Enregistrer</Text>
-            </TouchableOpacity>
-            <StatusBar style="auto" />
+
         </ScrollView>
     );
 }
@@ -252,6 +255,7 @@ const styles = StyleSheet.create({
         padding: 10,
         marginBottom: 15,
         backgroundColor: "#fff",
+        width: Platform.OS === 'web' ? '20%' : '100%',
     },
     pickerContainer: {
         borderWidth: 1,
@@ -262,6 +266,7 @@ const styles = StyleSheet.create({
         height: 40,
         justifyContent: "center",
         overflow: "hidden",
+        width: Platform.OS === 'web' ? '20%' : '100%',
     },
     textArea: {
         height: 100,
@@ -294,6 +299,7 @@ const styles = StyleSheet.create({
         height: 20,
         alignItems: "center",
         justifyContent: "center",
+
     },
     deleteButtonText: {
         color: "#fff",
@@ -306,6 +312,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: "center",
         marginBottom: 20,
+        width: Platform.OS === 'web' ? '20%' : '100%',
     },
     addPhotoButtonText: {
         color: "#fff",
@@ -316,6 +323,7 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         borderRadius: 8,
         alignItems: "center",
+        width: Platform.OS === 'web' ? '20%' : '100%',
     },
     buttonText: {
         color: "#fff",
@@ -324,7 +332,7 @@ const styles = StyleSheet.create({
     },
     hashtagContainer: {
     marginBottom: 20,
-    width: "100%",
+        width: Platform.OS === 'web' ? '20%' : '100%',
 },
 //
 //hashtagList: {
@@ -340,6 +348,7 @@ hashtagItem: {
     paddingVertical: 5,
     marginRight: 5,
     marginBottom: 5,
+
 },
 hashtagText: {
     fontSize: 14,

@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image } from "react-native";
+import {StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image, Platform} from "react-native";
 import { useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { auth } from "../Firebase";
@@ -279,9 +279,10 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         justifyContent: "flex-start",
         backgroundColor: "#fff",
+        alignItems:'center',
     },
     formContainer: {
-        width: "100%",
+        width: Platform.OS === 'web' ? '50%' : '100%',
         alignItems: "center",
     },
     title: {

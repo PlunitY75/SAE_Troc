@@ -20,6 +20,7 @@ import { getDatabase, onValue, ref } from "firebase/database";
 import { useFonts } from 'expo-font';
 import Footer from "../composants/Footer";
 import NavBar from "../composants/NavBar";
+import {auth} from "../Firebase";
 
 
 export default function App() {
@@ -29,10 +30,18 @@ export default function App() {
     const [electronicAnnonces, setElectronicAnnonces] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     const isWeb = Platform.OS === 'web';
+    const [user, setUser] = useState(null);
 
     const [fontsLoaded] = useFonts({
         'AnotherShabby': require('../assets/anothershabby.ttf'),
     });
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+            setUser(currentUser);
+        });
+        return unsubscribe;
+    }, []);
 
     const onRefresh = () => {
         setRefreshing(true); // Active l'état de rafraîchissement
@@ -119,16 +128,23 @@ export default function App() {
                 </TouchableOpacity>
 
                 {/* Boutons "S'inscrire" et "Se connecter" */}
-                <TouchableOpacity style={styles.authButton} onPress={() => navigation.navigate('RegisterScreen')}>
-                    <Text style={[styles.authButtonText, {color: 'black'}]}>S'inscrire</Text>
-                </TouchableOpacity>
+                {!user && (
+                    <View style={{flexDirection:'row'}}>
+                        <TouchableOpacity style={styles.authButton} onPress={() => navigation.navigate('RegisterScreen')}>
+                            <Text style={[styles.authButtonText, {color: 'black'}]}>S'inscrire</Text>
+                        </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.authButton, {backgroundColor: '#47b089'}]} onPress={() => navigation.navigate('LoginScreen')}>
-                    <Text style={[styles.authButtonText, {color: 'white'}]}>Se connecter</Text>
-                </TouchableOpacity>
+                        <TouchableOpacity style={[styles.authButton, {backgroundColor: '#47b089'}]} onPress={() => navigation.navigate('LoginScreen')}>
+                            <Text style={[styles.authButtonText, {color: 'white'}]}>Se connecter</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
             </View>
-            <NavBar/>
+            {isWeb && (
+                <NavBar/>
+            )}
+
             {/* Contenu défilant */}
 
             <ScrollView contentContainerStyle={styles.scrollViewContent}
@@ -155,84 +171,179 @@ export default function App() {
 
                 )}
                 {/* Section "Les tendances du moment" */}
-                <View style={styles.tendanceContainer}>
-                    <Text style={styles.tendanceTitle}>Les tendances du moment !</Text>
-                    <FlatList
-                        data={annonces}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={{ flex: 1 }}>
-                                <Card
-                                    imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                                    title={item.objet || 'Titre indisponible'}
-                                    description={item.description || 'Pas de description'}
-                                    price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
-                                    date={item.dateAjout
-                                        ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                        : 'Date inconnue'
-                                    }
-                                    tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                <View style={styles.restContainer}>
+                    {!isWeb && (
+                        <View>
+                            <View style={styles.tendanceContainer}>
+                                <Text style={styles.tendanceTitle}>Les tendances du moment !</Text>
+                                <FlatList
+                                    data={annonces}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                                            <Card
+                                                imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                                title={item.objet || 'Titre indisponible'}
+                                                description={item.description || 'Pas de description'}
+                                                price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                                date={item.dateAjout
+                                                    ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                                    : 'Date inconnue'
+                                                }
+                                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                    keyExtractor={(item) => item.id}
+                                    horizontal={true}
+
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={styles.carrousel}
                                 />
-                            </TouchableOpacity>
-                        )}
-                        keyExtractor={(item) => item.id}
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.carrousel}
-                    />
-                </View>
+                            </View>
 
 
-                {/* Section "Appareil électronique" */}
-                <View style={styles.appareilContainer}>
-                    <Text style={styles.appareilTitle}>Appareil électronique :</Text>
-                    <FlatList style={styles.appareilContainer}
-                        data={electronicAnnonces}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
-                                <Card
-                                    imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                                    title={item.objet || 'Titre indisponible'}
-                                    description={item.description || 'Pas de description'}
-                                    price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
-                                    date={item.dateAjout
-                                        ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                        : 'Date inconnue'
-                                    }
-                                    tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                            {/* Section "Appareil électronique" */}
+                            <View style={styles.appareilContainer}>
+                                <Text style={styles.appareilTitle}>Appareil électronique :</Text>
+                                <FlatList style={styles.appareilContainer}
+                                          data={electronicAnnonces}
+                                          renderItem={({ item }) => (
+                                              <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                                                  <Card
+                                                      imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                                      title={item.objet || 'Titre indisponible'}
+                                                      description={item.description || 'Pas de description'}
+                                                      price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                                      date={item.dateAjout
+                                                          ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                                          : 'Date inconnue'
+                                                      }
+                                                      tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                                                  />
+                                              </TouchableOpacity>
+                                          )}
+                                          keyExtractor={(item) => item.id}
+                                          horizontal={true}
+                                          showsHorizontalScrollIndicator={false}
+
+                                          contentContainerStyle={styles.carrousel}
                                 />
-                            </TouchableOpacity>
-                        )}
-                        keyExtractor={(item) => item.id}
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.carrousel}
-                    />
-                </View>
-                {/* Section "Toutes les annonces" */}
-                <View style={[styles.appareilContainer, {paddingBottom: 20}]}>
-                    <Text style={styles.annonceTitle}>Toutes les annonces :</Text>
-                    <FlatList
-                        data={annonces}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
-                                <Card
-                                    imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                                    title={item.objet || 'Titre indisponible'}
-                                    description={item.description || 'Pas de description'}
-                                    price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
-                                    date={item.dateAjout
-                                        ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                        : 'Date inconnue'
-                                    }
-                                    tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                            </View>
+                            {/* Section "Toutes les annonces" */}
+                            <View style={[styles.appareilContainer, {paddingBottom: 20}]}>
+                                <Text style={styles.annonceTitle}>Toutes les annonces :</Text>
+                                <FlatList
+                                    data={annonces}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                                            <Card
+                                                imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                                title={item.objet || 'Titre indisponible'}
+                                                description={item.description || 'Pas de description'}
+                                                price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                                date={item.dateAjout
+                                                    ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                                    : 'Date inconnue'
+                                                }
+                                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                    keyExtractor={(item) => item.id}
+
+                                    horizontal={true}  // Afficher les annonces en carrousel horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={styles.carrousel}
                                 />
-                            </TouchableOpacity>
-                        )}
-                        keyExtractor={(item) => item.id}
-                        horizontal={true}  // Afficher les annonces en carrousel horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.carrousel}
-                    />
+                            </View>
+                        </View>
+                    )}
+                    {isWeb && (
+                        <View style={{alignItems:'center', width:'70%'}}>
+                            <View style={styles.tendanceContainer}>
+                                <Text style={styles.tendanceTitle}>Les tendances du moment !</Text>
+                                <FlatList
+                                    data={annonces}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                                            <Card
+                                                imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                                title={item.objet || 'Titre indisponible'}
+                                                description={item.description || 'Pas de description'}
+                                                price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                                date={item.dateAjout
+                                                    ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                                    : 'Date inconnue'
+                                                }
+                                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                    keyExtractor={(item) => item.id}
+                                    numColumns={5}
+
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={styles.carrousel}
+                                />
+                            </View>
+
+
+                            {/* Section "Appareil électronique" */}
+                            <View style={styles.appareilContainer}>
+                                <Text style={styles.appareilTitle}>Appareil électronique :</Text>
+                                <FlatList style={styles.appareilContainer}
+                                          data={electronicAnnonces}
+                                          renderItem={({ item }) => (
+                                              <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                                                  <Card
+                                                      imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                                      title={item.objet || 'Titre indisponible'}
+                                                      description={item.description || 'Pas de description'}
+                                                      price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                                      date={item.dateAjout
+                                                          ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                                          : 'Date inconnue'
+                                                      }
+                                                      tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                                                  />
+                                              </TouchableOpacity>
+                                          )}
+                                          keyExtractor={(item) => item.id}
+                                          numColumns={5}
+                                          showsHorizontalScrollIndicator={false}
+
+                                          contentContainerStyle={styles.carrousel}
+                                />
+                            </View>
+                            {/* Section "Toutes les annonces" */}
+                            <View style={[styles.appareilContainer, {paddingBottom: 20}]}>
+                                <Text style={styles.annonceTitle}>Toutes les annonces :</Text>
+                                <FlatList
+                                    data={annonces}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
+                                            <Card
+                                                imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
+                                                title={item.objet || 'Titre indisponible'}
+                                                description={item.description || 'Pas de description'}
+                                                price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
+                                                date={item.dateAjout
+                                                    ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                                                    : 'Date inconnue'
+                                                }
+                                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                    keyExtractor={(item) => item.id}
+
+                                    numColumns={5}
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={styles.carrousel}
+                                />
+                            </View>
+                        </View>
+                    )}
                 </View>
                 {isWeb && (
                     <Footer />
@@ -246,7 +357,7 @@ export default function App() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: Platform.OS === 'web' ? 'white' : '#F5F5F5',
     },
     topNavBarContainer: {
         backgroundColor: Platform.OS === 'web' ? 'white' : '#47b089',
@@ -314,6 +425,10 @@ const styles = StyleSheet.create({
         color: '#47b089',
         fontSize: 22,
     },
+    restContainer:{
+        flexDirection:'column',
+        alignItems: Platform.OS === 'web' ? 'center' : "none"
+    },
     tendanceContainer: {
         width: '100%',
         flexDirection: 'column',
@@ -329,11 +444,13 @@ const styles = StyleSheet.create({
     carrousel: {
         paddingLeft: 10,
         paddingRight: 10,
+        flexDirection: Platform.OS === 'web' ? 'column' : 'row',
     },
 
     appareilContainer: {
         backgroundColor:'white',
         marginTop:20,
+        width: '100%',
         paddingBottom: Platform.OS === 'web' ? 10 : 0,
     },
     appareilTitle:{
@@ -359,6 +476,7 @@ const styles = StyleSheet.create({
     },
     cardWrapper: {
         flex: 1,
-        marginRight: 10,
+        margin: 10, // Ajout d'espace entre les cartes
+        width: '100%',
     },
 });

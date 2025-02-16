@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Platform} from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { firestore, auth } from '../Firebase';  // Assurez-vous d'importer Firebase et auth correctement
 
@@ -100,12 +100,28 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         padding: 20,
     },
+    sellerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    sellerImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 10,
+    },
+    sellerName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
     productImage: {
         width: '100%',
         height: 300,
-        resizeMode: 'cover',
+        resizeMode: Platform.OS === 'web' ? "center" : "cover",
         borderRadius: 10,
         marginBottom: 20,
+        backgroundColor: '#DDD'
     },
     detailsContainer: {
         marginBottom: 30,
@@ -141,6 +157,7 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         borderRadius: 5,
         alignItems: 'center',
+        width: Platform.OS === 'web' ? '30%' : '100%',
     },
     contactButtonText: {
         color: '#fff',

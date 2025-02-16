@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Platform} from 'react-native';
 import { firestore, auth } from '../Firebase';  // Assurez-vous d'importer Firebase et auth correctement
 import { getDatabase, ref, get, update } from 'firebase/database';  // Importer les méthodes de Realtime Database
 
@@ -188,31 +188,34 @@ export default function ConvTestScreen({ route }) {
             </ScrollView>
 
             {/* Zone de saisie de message */}
-            <TextInput 
-                value={newMessage} 
-                onChangeText={setNewMessage} 
-                placeholder="Écrivez un message..." 
-                style={styles.textInput} 
-            />
+            <View style={{alignItems: Platform.OS === 'web' ? 'center' : 'none'}}>
+                <TextInput
+                    value={newMessage}
+                    onChangeText={setNewMessage}
+                    placeholder="Écrivez un message..."
+                    style={styles.textInput}
+                />
 
-            {/* Bouton envoyer */}
-            <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-                <Text style={styles.sendButtonText}>Envoyer</Text>
-            </TouchableOpacity>
-
-            {/* Bouton "Payer" uniquement pour l'acheteur */}
-            {isBuyer && !readyToBuy && (
-                <TouchableOpacity onPress={handlePay} style={styles.payButton}>
-                    <Text style={styles.payButtonText}>Payer</Text>
+                {/* Bouton envoyer */}
+                <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+                    <Text style={styles.sendButtonText}>Envoyer</Text>
                 </TouchableOpacity>
-            )}
 
-            {/* Bouton "Accepter" uniquement pour le vendeur */}
-            {isSeller && readyToBuy && (
-                <TouchableOpacity onPress={handleAccept} style={styles.acceptButton}>
-                    <Text style={styles.acceptButtonText}>Accepter</Text>
-                </TouchableOpacity>
-            )}
+                {/* Bouton "Payer" uniquement pour l'acheteur */}
+                {isBuyer && !readyToBuy && (
+                    <TouchableOpacity onPress={handlePay} style={styles.payButton}>
+                        <Text style={styles.payButtonText}>Payer</Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* Bouton "Accepter" uniquement pour le vendeur */}
+                {isSeller && readyToBuy && (
+                    <TouchableOpacity onPress={handleAccept} style={styles.acceptButton}>
+                        <Text style={styles.acceptButtonText}>Accepter</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+
         </View>
     );
 }
@@ -267,12 +270,14 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         marginBottom: 10,
         fontSize: 16,
+        width: Platform.OS === 'web' ? '70%' : '100%',
     },
     sendButton: {
         backgroundColor: '#47b089',
         paddingVertical: 12,
         borderRadius: 30,
         alignItems: 'center',
+        width: Platform.OS === 'web' ? '70%' : '100%',
     },
     sendButtonText: {
         color: '#fff',
@@ -285,6 +290,7 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         marginTop: 10,
         alignItems: 'center',
+        width: Platform.OS === 'web' ? '70%' : '100%',
     },
     payButtonText: {
         color: '#fff',

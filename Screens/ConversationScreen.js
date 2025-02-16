@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     height: 45,
     backgroundColor: '#f9f9f9',
+    width: Platform.OS === 'web' ? '20%' : '100%',
   },
   sendButton: {
     backgroundColor: '#47b089',
@@ -135,6 +136,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 25,
     justifyContent: 'center',
+    width: Platform.OS === 'web' ? '20%' : '100%',
   },
   sendButtonText: {
     color: '#fff',
