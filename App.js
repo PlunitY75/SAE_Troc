@@ -16,6 +16,7 @@ import CompteModifScreen from './Screens/Reglages/CompteModifScreen';
 import ResultatsRechercheScreen from './Screens/ResultatsRechercheScreen'
 import AffichageProduitScreen from "./Screens/AffichageProduitScreen";
 import ConvTestScreen from "./Screens/ConvTestScreen";
+import AffichageProduitTrocScreen from "./Screens/AffichageProduitTrocScreen";
 
 export const ConversationsContext = createContext();
 
@@ -50,6 +51,7 @@ export default function App() {
                     <Stack.Screen name="AffichageProduitScreen" component={AffichageProduitScreen} options={{ title: 'Page du Produit' }} />
                     <Stack.Screen name="ConvTestScreen" component={ConvTestScreen} options={{ title: 'Conversation' }} />
                     <Stack.Screen name="CompteScreen" component={CompteScreen} options={{ title: 'Mon Compte' }} />
+                    <Stack.Screen name="AffichageProduitTrocScreen" component={AffichageProduitTrocScreen} options={{ title: 'Annonce' }} />
                 </Stack.Navigator>
             </NavigationContainer>
         </ConversationsContext.Provider>

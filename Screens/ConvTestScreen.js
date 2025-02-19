@@ -1,37 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import {View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Platform} from 'react-native';
-import { firestore, auth } from '../Firebase';  // Assurez-vous d'importer Firebase et auth correctement
-import { getDatabase, ref, get, update } from 'firebase/database';  // Importer les méthodes de Realtime Database
+import {View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Platform, Modal, FlatList, Image } from 'react-native';
+import { firestore, auth } from '../Firebase';
+import { getDatabase, ref, get, update } from 'firebase/database';
+import { useNavigation } from '@react-navigation/native';
 
 export default function ConvTestScreen({ route }) {
-    const { conversationId } = route.params;  // Récupérer l'ID de la conversation
+    const { conversationId } = route.params;
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
-    const [sellerInfo, setSellerInfo] = useState(null);  // Informations du vendeur
+    const [sellerInfo, setSellerInfo] = useState(null);
     const [user, setUser] = useState(null);
-    const [annonceId, setAnnonceId] = useState(null);  // Pour stocker l'ID de l'annonce
-    const [sellerName, setSellerName] = useState(''); // Nom du vendeur
-    const [isBuyer, setIsBuyer] = useState(false);  // Identifier si l'utilisateur est l'acheteur
-    const [isSeller, setIsSeller] = useState(false); // Identifier si l'utilisateur est le vendeur
-    const [readyToBuy, setReadyToBuy] = useState(false); // Indicateur si l'acheteur a accepté l'offre
-    const [saleCompleted, setSaleCompleted] = useState(false); // Indicateur pour la vente effectuée
+    const [annonceId, setAnnonceId] = useState(null);
+    const [transactionType, setTransactionType] = useState(null);
+    const [sellerName, setSellerName] = useState('');
+    const [isBuyer, setIsBuyer] = useState(false);
+    const [isSeller, setIsSeller] = useState(false);
+    const [readyToBuy, setReadyToBuy] = useState(false);
+    const [saleCompleted, setSaleCompleted] = useState(false);
+    const [userAnnonces, setUserAnnonces] = useState([]);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [tradeOfferReceived, setTradeOfferReceived] = useState(false);
+    const navigation = useNavigation();
 
     useEffect(() => {
-        // Vérification de l'utilisateur authentifié
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
             setUser(currentUser);
             if (currentUser) {
-                fetchSellerInfo(currentUser.uid);
+                fetchConversationData(currentUser.uid);
+                fetchUserAnnonces(currentUser.uid);
             }
         });
 
-        // Nettoyage à la fermeture du composant
         return () => unsubscribe();
     }, []);
 
     useEffect(() => {
         if (user && conversationId) {
-            // Récupérer les messages de la conversation
             const unsubscribe = firestore
                 .collection('conversations')
                 .doc(conversationId)
@@ -40,47 +44,42 @@ export default function ConvTestScreen({ route }) {
                 .onSnapshot(snapshot => {
                     const msgs = snapshot.docs.map(doc => doc.data());
                     setMessages(msgs);
+
+                    // Vérifie si un échange a été proposé au vendeur
+                    const hasTradeOffer = msgs.some(msg => msg.tradeOffer && msg.senderId !== user.uid);
+                    setTradeOfferReceived(hasTradeOffer);
                 });
-
-            // Récupérer l'ID de l'annonce de la conversation et vérifier le statut de "readyToBuy"
-            const getAnnonceId = async () => {
-                const conversationDoc = await firestore.collection('conversations').doc(conversationId).get();
-                const annonceId = conversationDoc.data()?.annonceId;
-                setAnnonceId(annonceId);
-
-                // Vérifier si l'utilisateur est l'acheteur ou le vendeur
-                const participants = conversationDoc.data()?.participants || [];
-                if (participants[0] === user?.uid) {
-                    setIsSeller(true);  // Utilisateur est le vendeur
-                } else {
-                    setIsBuyer(true);  // Utilisateur est l'acheteur
-                }
-
-                // Vérifier si "readyToBuy" est true
-                const readyToBuyStatus = conversationDoc.data()?.readyToBuy;
-                setReadyToBuy(readyToBuyStatus || false);
-            };
-
-            getAnnonceId();
 
             return () => unsubscribe();
         }
     }, [user, conversationId]);
 
-    const fetchSellerInfo = async (userId) => {
-        // Récupérer les informations du vendeur à partir de la conversation
+    const fetchConversationData = async (userId) => {
         const conversationDoc = await firestore.collection('conversations').doc(conversationId).get();
-        const participants = conversationDoc.data()?.participants || [];
-        const sellerId = participants.find(id => id !== userId);  // Trouver l'ID du vendeur
+        const data = conversationDoc.data();
+        setAnnonceId(data?.annonceId);
+        setReadyToBuy(data?.readyToBuy || false);
 
+        const participants = data?.participants || [];
+        setIsSeller(participants[0] === userId);
+        setIsBuyer(!isSeller);
+
+        const sellerId = participants.find(id => id !== userId);
         if (sellerId) {
-            // Récupérer le nom du vendeur depuis Realtime Database
             const db = getDatabase();
             const sellerRef = ref(db, `users/${sellerId}/name`);
             const sellerSnapshot = await get(sellerRef);
-
             if (sellerSnapshot.exists()) {
                 setSellerName(sellerSnapshot.val());
+            }
+        }
+
+        if (data?.annonceId) {
+            const db = getDatabase();
+            const annonceRef = ref(db, `annonces/${data.annonceId}/transactionType`);
+            const annonceSnapshot = await get(annonceRef);
+            if (annonceSnapshot.exists()) {
+                setTransactionType(annonceSnapshot.val());
             }
         }
     };
@@ -91,7 +90,7 @@ export default function ConvTestScreen({ route }) {
                 .doc(conversationId)
                 .collection('messages')
                 .add({
-                    senderId: user.uid,  // Utilise l'ID de l'utilisateur courant
+                    senderId: user.uid,
                     message: newMessage,
                     createdAt: new Date(),
                 });
@@ -99,22 +98,34 @@ export default function ConvTestScreen({ route }) {
         }
     };
 
+        const fetchUserAnnonces = async (userId) => {
+            const db = getDatabase();
+            const userAnnoncesRef = ref(db, `annonces`);
+            const snapshot = await get(userAnnoncesRef);
+    
+            if (snapshot.exists()) {
+                const allAnnonces = Object.keys(snapshot.val()).map((id) => ({
+                    id,
+                    ...snapshot.val()[id],
+                }));
+    
+                const filteredAnnonces = allAnnonces.filter((a) => a.userId === userId);
+                setUserAnnonces(filteredAnnonces);
+            }
+        };
+
     const handlePay = async () => {
         if (isBuyer) {
-            // Mettre à jour "readyToBuy" dans la conversation
             await firestore.collection('conversations')
                 .doc(conversationId)
-                .update({
-                    readyToBuy: true,  // Marquer comme prêt à acheter
-                });
+                .update({ readyToBuy: true });
 
-            // Ajouter un message dans la conversation
             await firestore.collection('conversations')
                 .doc(conversationId)
                 .collection('messages')
                 .add({
                     senderId: user.uid,
-                    message: 'Le client accepte l\'offre',
+                    message: "Le client accepte l'offre",
                     createdAt: new Date(),
                 });
         }
@@ -122,64 +133,104 @@ export default function ConvTestScreen({ route }) {
 
     const handleAccept = async () => {
         if (isSeller) {
-            // Ajouter un message indiquant que le vendeur accepte l'offre
             await firestore.collection('conversations')
                 .doc(conversationId)
                 .collection('messages')
                 .add({
                     senderId: user.uid,
-                    message: 'Le vendeur accepte l\'offre',
+                    message: "Le vendeur accepte l'offre",
                     createdAt: new Date(),
                 });
 
-            // Une fois le vendeur accepte, on marque la vente comme effectuée
             setSaleCompleted(true);
 
-            // Ajouter un message pour la vente effectuée
             await firestore.collection('conversations')
                 .doc(conversationId)
                 .collection('messages')
                 .add({
                     senderId: user.uid,
-                    message: 'Vente effectuée',
+                    message: "Vente effectuée",
                     createdAt: new Date(),
                 });
 
-            // Mettre à jour "notAvailable" dans Realtime Database pour marquer l'annonce comme non disponible
             const db = getDatabase();
             const annonceRef = ref(db, `annonces/${annonceId}`);
-
-            // Nous récupérons d'abord les données existantes de l'annonce, puis nous mettons à jour l'attribut "notAvailable"
             const annonceSnapshot = await get(annonceRef);
             if (annonceSnapshot.exists()) {
-                // Ajouter ou mettre à jour l'attribut notAvailable sans supprimer les autres données
-                await update(annonceRef, {
-                    notAvailable: true,
-                });
+                await update(annonceRef, { notAvailable: true });
             }
         }
     };
+    
+
+    const handleAcceptTrade = async () => {
+        if (isSeller) {
+            await firestore.collection('conversations')
+                .doc(conversationId)
+                .collection('messages')
+                .add({
+                    senderId: user.uid,
+                    message: "Le vendeur accepte l'échange",
+                    createdAt: new Date(),
+                });
+    
+            // Marquer l'annonce comme non disponible après l'échange
+            const db = getDatabase();
+            const annonceRef = ref(db, `annonces/${annonceId}`);
+            const annonceSnapshot = await get(annonceRef);
+            if (annonceSnapshot.exists()) {
+                await update(annonceRef, { notAvailable: true });
+            }
+    
+            setSaleCompleted(true);
+        }
+    };
+    
+
+        const handleProposeTrade = () => {
+            setModalVisible(true);
+        };
+    
+        const sendTradeProposal = async (selectedAnnonce) => {
+            setModalVisible(false);
+    
+            await firestore.collection('conversations')
+                .doc(conversationId)
+                .collection('messages')
+                .add({
+                    senderId: user.uid,
+                    message: "Je propose cet article en échange",
+                    tradeOffer: selectedAnnonce,
+                    createdAt: new Date(),
+                });
+        };
 
     return (
         <View style={styles.container}>
-            {/* Affichage des informations du vendeur */}
             {sellerInfo && (
                 <View style={styles.sellerInfoContainer}>
                     <Text style={styles.sellerInfoText}>Vendeur : {sellerName || "Nom introuvable"}</Text>
                 </View>
             )}
 
-            {/* Affichage des messages */}
             <ScrollView style={styles.messageContainer}>
                 {messages.map((msg, index) => (
                     <View key={index} style={msg.senderId === user?.uid ? styles.userMessage : styles.sellerMessage}>
-                        <Text style={[msg.senderId === user?.uid ? styles.userText : styles.sellerText, msg.message.includes("Le client accepte l'offre") || msg.message.includes("Le vendeur accepte l'offre") ? styles.italicText : null]}>
-                            {msg.senderId === user?.uid ? 'Vous' : sellerName || 'Vendeur'}: {msg.message}
-                        </Text>
+                        {msg.tradeOffer ? (
+                            <TouchableOpacity
+                                style={styles.tradeOfferContainer}
+                                onPress={() => navigation.navigate('AffichageProduitTrocScreen', { annonce: msg.tradeOffer })}
+                            >
+                                <Image source={{ uri: `data:image/png;base64,${msg.tradeOffer.photos[0]}` }} style={styles.tradeImage} />
+                                <Text style={styles.tradeText}>{msg.tradeOffer.objet}</Text>
+                                <Text style={styles.tradePrice}>{msg.tradeOffer.prix ? `${msg.tradeOffer.prix}€` : 'Troc'}</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <Text style={styles.messageText}>{msg.message}</Text>
+                        )}
                     </View>
                 ))}
 
-                {/* Message "Vente effectuée" centré et en gros si la vente est complétée */}
                 {saleCompleted && (
                     <View style={styles.saleMessageContainer}>
                         <Text style={styles.saleMessageText}>Vente effectuée</Text>
@@ -187,7 +238,6 @@ export default function ConvTestScreen({ route }) {
                 )}
             </ScrollView>
 
-            {/* Zone de saisie de message */}
             <View style={{alignItems: Platform.OS === 'web' ? 'center' : 'none'}}>
                 <TextInput
                     value={newMessage}
@@ -195,130 +245,87 @@ export default function ConvTestScreen({ route }) {
                     placeholder="Écrivez un message..."
                     style={styles.textInput}
                 />
-
-                {/* Bouton envoyer */}
                 <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
                     <Text style={styles.sendButtonText}>Envoyer</Text>
                 </TouchableOpacity>
 
-                {/* Bouton "Payer" uniquement pour l'acheteur */}
-                {isBuyer && !readyToBuy && (
+                {transactionType === "Troc" && (
+                <TouchableOpacity onPress={handleProposeTrade} style={styles.tradeButton}>
+                    <Text style={styles.tradeButtonText}>💱 Proposer un échange</Text>
+                </TouchableOpacity>
+            )}
+
+                <Modal visible={modalVisible} animationType="slide">
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>Sélectionnez une annonce :</Text>
+                        <FlatList
+                            data={userAnnonces}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={styles.annonceItem}
+                                    onPress={() => sendTradeProposal(item)}
+                                >
+                                    <Image source={{ uri: `data:image/png;base64,${item.photos[0]}` }} style={styles.tradeImage} />
+                                    <Text style={styles.annonceText}>{item.objet}</Text>
+                                </TouchableOpacity>
+                            )}
+                            keyExtractor={(item) => item.id}
+                        />
+                        <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeModalButton}>
+                            <Text style={styles.closeModalButtonText}>Fermer</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
+                
+                {transactionType === "Troc" && isSeller && tradeOfferReceived && (
+                    <TouchableOpacity onPress={handleAcceptTrade} style={styles.acceptTradeButton}>
+                        <Text style={styles.acceptTradeButtonText}>Accepter l'échange</Text>
+                    </TouchableOpacity>
+                )}
+
+
+                {transactionType !== "Troc" && isBuyer && !readyToBuy && (
                     <TouchableOpacity onPress={handlePay} style={styles.payButton}>
                         <Text style={styles.payButtonText}>Payer</Text>
                     </TouchableOpacity>
                 )}
 
-                {/* Bouton "Accepter" uniquement pour le vendeur */}
-                {isSeller && readyToBuy && (
+                {transactionType !== "Troc" && isSeller && readyToBuy && (
                     <TouchableOpacity onPress={handleAccept} style={styles.acceptButton}>
                         <Text style={styles.acceptButtonText}>Accepter</Text>
                     </TouchableOpacity>
                 )}
             </View>
-
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f7f7f7',
-        padding: 20,
-    },
-    sellerInfoContainer: {
-        marginBottom: 20,
-    },
-    sellerInfoText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#2e7d32',  // Vert pour le vendeur
-    },
-    messageContainer: {
-        flex: 1,
-        marginBottom: 20,
-    },
-    userMessage: {
-        alignSelf: 'flex-end',
-        backgroundColor: '#47b089',  // Vert pour l'utilisateur
-        borderRadius: 10,
-        padding: 10,
-        marginBottom: 10,
-        maxWidth: '70%',
-    },
-    sellerMessage: {
-        alignSelf: 'flex-start',
-        backgroundColor: '#e0e0e0',  // Gris clair pour le vendeur
-        borderRadius: 10,
-        padding: 10,
-        marginBottom: 10,
-        maxWidth: '70%',
-    },
-    userText: {
-        color: '#fff',
-        fontSize: 16,
-    },
-    sellerText: {
-        color: '#333',
-        fontSize: 16,
-    },
-    textInput: {
-        borderWidth: 1,
-        borderColor: '#47b089',
-        borderRadius: 20,
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        marginBottom: 10,
-        fontSize: 16,
-        width: Platform.OS === 'web' ? '70%' : '100%',
-    },
-    sendButton: {
-        backgroundColor: '#47b089',
-        paddingVertical: 12,
-        borderRadius: 30,
-        alignItems: 'center',
-        width: Platform.OS === 'web' ? '70%' : '100%',
-    },
-    sendButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    payButton: {
-        backgroundColor: '#47b089',
-        paddingVertical: 12,
-        borderRadius: 30,
-        marginTop: 10,
-        alignItems: 'center',
-        width: Platform.OS === 'web' ? '70%' : '100%',
-    },
-    payButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    acceptButton: {
-        backgroundColor: '#8bc34a',
-        paddingVertical: 12,
-        borderRadius: 30,
-        marginTop: 10,
-        alignItems: 'center',
-    },
-    acceptButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    italicText: {
-        fontStyle: 'italic',
-    },
-    saleMessageContainer: {
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    saleMessageText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#4CAF50',
-    },
+    container: { flex: 1, backgroundColor: '#f7f7f7', padding: 20 },
+    sellerInfoContainer: { marginBottom: 20 },
+    sellerInfoText: { fontSize: 18, fontWeight: 'bold', color: '#2e7d32' },
+    messageContainer: { flex: 1, marginBottom: 20 },
+    userMessage: { alignSelf: 'flex-end', backgroundColor: '#47b089', borderRadius: 10, padding: 10, marginBottom: 10 },
+    sellerMessage: { alignSelf: 'flex-start', backgroundColor: '#e0e0e0', borderRadius: 10, padding: 10, marginBottom: 10 },
+    userText: { color: '#fff', fontSize: 16 },
+    sellerText: { color: '#333', fontSize: 16 },
+    textInput: { borderWidth: 1, borderColor: '#47b089', borderRadius: 20, paddingHorizontal: 15, paddingVertical: 10, marginBottom: 10, backgroundColor: '#fff' },
+    sendButton: { backgroundColor: '#47b089', paddingVertical: 12, borderRadius: 30, alignItems: 'center' },
+    sendButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    tradeButton: { backgroundColor: '#f39c12', paddingVertical: 12, borderRadius: 30, alignItems: 'center', marginTop: 10 },
+    tradeButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    payButton: { backgroundColor: '#47b089', paddingVertical: 12, borderRadius: 30, alignItems: 'center', marginTop: 10 },
+    payButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    acceptButton: { backgroundColor: '#8bc34a', paddingVertical: 12, borderRadius: 30, alignItems: 'center', marginTop: 10 },
+    acceptButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    saleMessageContainer: { alignItems: 'center', marginTop: 20 },
+    saleMessageText: { fontSize: 24, fontWeight: 'bold', color: '#4CAF50' },
+    modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, color: '#fff' },
+    annonceItem: { backgroundColor: '#fff', padding: 15, borderRadius: 10, marginVertical: 10, alignItems: 'center' },
+    annonceText: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+    tradeImage: { width: 100, height: 100, borderRadius: 10, marginBottom: 10 },
+    closeModalButton: { backgroundColor: '#d9534f', padding: 12, borderRadius: 30, alignItems: 'center', marginTop: 10 },
+    closeModalButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
 });
+
