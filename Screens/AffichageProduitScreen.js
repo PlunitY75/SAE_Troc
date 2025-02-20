@@ -1,27 +1,61 @@
-import React, { useState } from 'react';
-import {View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Platform} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { firestore, auth } from '../Firebase';  // Assurez-vous d'importer Firebase et auth correctement
+import { firestore, auth } from '../Firebase';
+import { getDatabase, ref, get, set, remove } from 'firebase/database';
 
 export default function AffichageProduitScreen() {
     const route = useRoute();
     const navigation = useNavigation();
-    const { annonce } = route.params; // Récupère l'annonce passée depuis la page précédente
+    const { annonce } = route.params;
     const [loading, setLoading] = useState(false);
+    const [liked, setLiked] = useState(false);
+    const user = auth.currentUser;
+
+    useEffect(() => {
+        if (user) {
+            checkIfLiked();
+        }
+    }, [user, annonce]);
+
+    // Vérifier si l'annonce est déjà likée
+    const checkIfLiked = async () => {
+        const db = getDatabase();
+        const likeRef = ref(db, `users/${user.uid}/annoncesLikees/${annonce.id}`);
+        const snapshot = await get(likeRef);
+
+        if (snapshot.exists()) {
+            setLiked(true);
+        } else {
+            setLiked(false);
+        }
+    };
+
+    // Fonction pour liker / unliker une annonce
+    const handleLike = async () => {
+        const db = getDatabase();
+        const likeRef = ref(db, `users/${user.uid}/annoncesLikees/${annonce.id}`);
+
+        if (liked) {
+            // Supprimer l'annonce des likes
+            await remove(likeRef);
+            setLiked(false);
+        } else {
+            // Ajouter l'annonce aux likes
+            await set(likeRef, true);
+            setLiked(true);
+        }
+    };
 
     const handleContactSeller = async () => {
         setLoading(true);
-
         try {
-            // Récupérer l'ID du vendeur depuis l'annonce
             const sellerId = annonce.userId;
-            const user = auth.currentUser; // Utilisation correcte de auth
             if (!user) {
                 alert("Vous devez être connecté pour contacter le vendeur");
                 return;
             }
 
-            // Vérifier si une conversation existe déjà avec le même annonceId et les deux participants
             const existingConversationSnapshot = await firestore
                 .collection('conversations')
                 .where('annonceId', '==', annonce.id)
@@ -29,19 +63,15 @@ export default function AffichageProduitScreen() {
                 .get();
 
             if (!existingConversationSnapshot.empty) {
-                // Si une conversation existe, ouvrir la conversation existante
                 const existingConversationId = existingConversationSnapshot.docs[0].id;
                 navigation.navigate('ConvTestScreen', { conversationId: existingConversationId });
             } else {
-                // Sinon, créer une nouvelle conversation
                 const conversationRef = firestore.collection('conversations').doc();
                 await conversationRef.set({
-                    participants: [sellerId, user.uid], // Remplacer 'currentUserId' par l'ID de l'utilisateur connecté
+                    participants: [sellerId, user.uid],
                     createdAt: new Date(),
-                    annonceId: annonce.id, // Ajouter l'ID de l'annonce à la conversation
+                    annonceId: annonce.id,
                 });
-
-                // Une fois la conversation créée, naviguer vers la page de chat avec l'ID de la conversation
                 navigation.navigate('ConvTestScreen', { conversationId: conversationRef.id });
             }
 
@@ -54,13 +84,8 @@ export default function AffichageProduitScreen() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            {/* Affichage de l'image du produit */}
-            <Image
-                source={{ uri: `data:image/png;base64,${annonce.photos[0]}` }}
-                style={styles.productImage}
-            />
+            <Image source={{ uri: `data:image/png;base64,${annonce.photos[0]}` }} style={styles.productImage} />
 
-            {/* Informations sur le produit */}
             <View style={styles.detailsContainer}>
                 <Text style={styles.productTitle}>{annonce.objet || 'Titre indisponible'}</Text>
                 <Text style={styles.productPrice}>
@@ -72,24 +97,34 @@ export default function AffichageProduitScreen() {
                 <Text style={styles.productDate}>
                     {annonce.dateAjout
                         ? new Date(annonce.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                        : 'Date inconnue'
-                    }
+                        : 'Date inconnue'}
                 </Text>
                 {annonce.transactionType === 'Location' && (
                     <Text style={styles.productDuration}>Durée de location: {annonce.locationDuration}</Text>
                 )}
             </View>
 
-            {/* Bouton pour contacter le vendeur */}
-            <TouchableOpacity
-                style={styles.contactButton}
-                onPress={handleContactSeller}
-                disabled={loading} // Désactiver le bouton en cas de chargement
-            >
-                <Text style={styles.contactButtonText}>
-                    {loading ? 'Chargement...' : 'Contacter le vendeur'}
-                </Text>
-            </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                    style={styles.contactButton}
+                    onPress={handleContactSeller}
+                    disabled={loading}
+                >
+                    <Text style={styles.contactButtonText}>
+                        {loading ? 'Chargement...' : 'Contacter le vendeur'}
+                    </Text>
+                </TouchableOpacity>
+
+                {/* Bouton Like */}
+                <TouchableOpacity
+                    style={[styles.likeButton, liked ? styles.liked : null]}
+                    onPress={handleLike}
+                >
+                    <Text style={styles.likeButtonText}>
+                        {liked ? '❤️ Liké' : '🤍 Like'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </ScrollView>
     );
 }
@@ -99,21 +134,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
         padding: 20,
-    },
-    sellerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    sellerImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        marginRight: 10,
-    },
-    sellerName: {
-        fontSize: 18,
-        fontWeight: 'bold',
     },
     productImage: {
         width: '100%',
@@ -134,7 +154,7 @@ const styles = StyleSheet.create({
     productPrice: {
         fontSize: 20,
         color: '#47b089',
-        fontWeight:500,
+        fontWeight: '500',
         marginBottom: 10,
     },
     productDescription: {
@@ -152,16 +172,35 @@ const styles = StyleSheet.create({
         color: '#888',
         marginBottom: 10,
     },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
     contactButton: {
         backgroundColor: '#47b089',
         paddingVertical: 15,
         borderRadius: 5,
         alignItems: 'center',
-        width: Platform.OS === 'web' ? '30%' : '100%',
+        width: '48%',
     },
     contactButtonText: {
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
     },
+    likeButton: {
+        backgroundColor: '#ccc',
+        paddingVertical: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+        width: '48%',
+    },
+    likeButtonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    liked: {
+        backgroundColor: '#ff4757',  // Rouge pour montrer que l'annonce est likée
+    },
 });
+

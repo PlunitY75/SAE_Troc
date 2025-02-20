@@ -49,6 +49,10 @@ export default function App() {
         setTimeout(() => setRefreshing(false), 1000); // Désactive après 1 seconde (ou lorsque le fetch est terminé)
     };
 
+    const handleAnnoncesLikees = () => {
+        navigation.navigate('AnnoncesLikeesScreen'); // Redirige vers la nouvelle page
+    };
+
     const connexionRedirection = () => {
         navigation.navigate("CompteScreen");
     };
@@ -114,7 +118,7 @@ export default function App() {
                 <TouchableOpacity style={styles.navBarButton} onPress={connexionRedirection}>
                     <MaterialCommunityIcons name="account" size={35} color="#687a86" />
                 </TouchableOpacity>
-
+    
                 <TextInput
                     placeholder="Rechercher des articles"
                     style={styles.input}
@@ -122,31 +126,28 @@ export default function App() {
                     onChangeText={setSearchQuery}
                     onSubmitEditing={handleSearch}
                 />
-
+    
                 <TouchableOpacity style={styles.navBarButton} onPress={handleSearch}>
                     <FontAwesome5 name="search" size={24} color="#687a86" />
                 </TouchableOpacity>
-
+    
                 {/* Boutons "S'inscrire" et "Se connecter" */}
                 {!user && (
-                    <View style={{flexDirection:'row'}}>
+                    <View style={{ flexDirection: 'row' }}>
                         <TouchableOpacity style={styles.authButton} onPress={() => navigation.navigate('RegisterScreen')}>
-                            <Text style={[styles.authButtonText, {color: 'black'}]}>S'inscrire</Text>
+                            <Text style={[styles.authButtonText, { color: 'black' }]}>S'inscrire</Text>
                         </TouchableOpacity>
-
-                        <TouchableOpacity style={[styles.authButton, {backgroundColor: '#47b089'}]} onPress={() => navigation.navigate('LoginScreen')}>
-                            <Text style={[styles.authButtonText, {color: 'white'}]}>Se connecter</Text>
+    
+                        <TouchableOpacity style={[styles.authButton, { backgroundColor: '#47b089' }]} onPress={() => navigation.navigate('LoginScreen')}>
+                            <Text style={[styles.authButtonText, { color: 'white' }]}>Se connecter</Text>
                         </TouchableOpacity>
                     </View>
                 )}
-
             </View>
-            {isWeb && (
-                <NavBar/>
-            )}
-
+    
+            {isWeb && <NavBar />}
+    
             {/* Contenu défilant */}
-
             <ScrollView contentContainerStyle={styles.scrollViewContent}
                         refreshControl={
                             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -157,19 +158,24 @@ export default function App() {
                         source={require('../assets/img4.jpg')}
                         style={styles.backgroundImage}
                     >
-                        <View style={{ backgroundColor: 'white',marginLeft: 100,padding:20 ,justifyContent: 'center', alignItems: 'flex-start', paddingLeft: 20, borderRadius: 7}}>
+                        <View style={{ backgroundColor: 'white', marginLeft: 100, padding: 20, justifyContent: 'center', alignItems: 'flex-start', paddingLeft: 20, borderRadius: 7 }}>
                             <Text style={styles.textOnBackground}>
-                                <Text style={{color: 'black', fontWeight: 500}}>Sur </Text>
-                                <Text style={{color: "#47b089", fontWeight: 700}}>Troc&Co</Text>
-                                <Text style={{color: 'black', fontWeight: 500}}> vous pouvez{'\n'}Vendre{'\n'}Louer{'\n'}et </Text>
-                                <Text style={{color: "#47b089", fontWeight: 700}}>Troquer !</Text>
+                                <Text style={{ color: 'black', fontWeight: 500 }}>Sur </Text>
+                                <Text style={{ color: "#47b089", fontWeight: 700 }}>Troc&Co</Text>
+                                <Text style={{ color: 'black', fontWeight: 500 }}> vous pouvez{'\n'}Vendre{'\n'}Louer{'\n'}et </Text>
+                                <Text style={{ color: "#47b089", fontWeight: 700 }}>Troquer !</Text>
                             </Text>
-
                         </View>
                     </ImageBackground>
-
-
                 )}
+    
+                {/* Bouton "Voir mes annonces likées" */}
+                {user && (
+                    <TouchableOpacity style={styles.likedButton} onPress={() => navigation.navigate('AnnoncesLikeesScreen')}>
+                        <Text style={styles.likedButtonText}>❤️ Voir mes annonces likées</Text>
+                    </TouchableOpacity>
+                )}
+    
                 {/* Section "Les tendances du moment" */}
                 <View style={styles.restContainer}>
                     {!isWeb && (
@@ -189,51 +195,21 @@ export default function App() {
                                                     ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
                                                     : 'Date inconnue'
                                                 }
-                                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
                                             />
                                         </TouchableOpacity>
                                     )}
                                     keyExtractor={(item) => item.id}
                                     horizontal={true}
-
                                     showsHorizontalScrollIndicator={false}
                                     contentContainerStyle={styles.carrousel}
                                 />
                             </View>
-
-
+    
                             {/* Section "Appareil électronique" */}
                             <View style={styles.appareilContainer}>
                                 <Text style={styles.appareilTitle}>Appareil électronique :</Text>
-                                <FlatList style={styles.appareilContainer}
-                                          data={electronicAnnonces}
-                                          renderItem={({ item }) => (
-                                              <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
-                                                  <Card
-                                                      imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                                                      title={item.objet || 'Titre indisponible'}
-                                                      description={item.description || 'Pas de description'}
-                                                      price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
-                                                      date={item.dateAjout
-                                                          ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                                          : 'Date inconnue'
-                                                      }
-                                                      tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
-                                                  />
-                                              </TouchableOpacity>
-                                          )}
-                                          keyExtractor={(item) => item.id}
-                                          horizontal={true}
-                                          showsHorizontalScrollIndicator={false}
-
-                                          contentContainerStyle={styles.carrousel}
-                                />
-                            </View>
-                            {/* Section "Toutes les annonces" */}
-                            <View style={[styles.appareilContainer, {paddingBottom: 20}]}>
-                                <Text style={styles.annonceTitle}>Toutes les annonces :</Text>
                                 <FlatList
-                                    data={annonces}
+                                    data={electronicAnnonces}
                                     renderItem={({ item }) => (
                                         <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
                                             <Card
@@ -245,21 +221,20 @@ export default function App() {
                                                     ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
                                                     : 'Date inconnue'
                                                 }
-                                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
                                             />
                                         </TouchableOpacity>
                                     )}
                                     keyExtractor={(item) => item.id}
-
-                                    horizontal={true}  // Afficher les annonces en carrousel horizontal
+                                    horizontal={true}
                                     showsHorizontalScrollIndicator={false}
                                     contentContainerStyle={styles.carrousel}
                                 />
                             </View>
                         </View>
                     )}
+    
                     {isWeb && (
-                        <View style={{alignItems:'center', width:'70%'}}>
+                        <View style={{ alignItems: 'center', width: '70%' }}>
                             <View style={styles.tendanceContainer}>
                                 <Text style={styles.tendanceTitle}>Les tendances du moment !</Text>
                                 <FlatList
@@ -275,68 +250,10 @@ export default function App() {
                                                     ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
                                                     : 'Date inconnue'
                                                 }
-                                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
                                             />
                                         </TouchableOpacity>
                                     )}
                                     keyExtractor={(item) => item.id}
-                                    numColumns={5}
-
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={styles.carrousel}
-                                />
-                            </View>
-
-
-                            {/* Section "Appareil électronique" */}
-                            <View style={styles.appareilContainer}>
-                                <Text style={styles.appareilTitle}>Appareil électronique :</Text>
-                                <FlatList style={styles.appareilContainer}
-                                          data={electronicAnnonces}
-                                          renderItem={({ item }) => (
-                                              <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
-                                                  <Card
-                                                      imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                                                      title={item.objet || 'Titre indisponible'}
-                                                      description={item.description || 'Pas de description'}
-                                                      price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
-                                                      date={item.dateAjout
-                                                          ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                                          : 'Date inconnue'
-                                                      }
-                                                      tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
-                                                  />
-                                              </TouchableOpacity>
-                                          )}
-                                          keyExtractor={(item) => item.id}
-                                          numColumns={5}
-                                          showsHorizontalScrollIndicator={false}
-
-                                          contentContainerStyle={styles.carrousel}
-                                />
-                            </View>
-                            {/* Section "Toutes les annonces" */}
-                            <View style={[styles.appareilContainer, {paddingBottom: 20}]}>
-                                <Text style={styles.annonceTitle}>Toutes les annonces :</Text>
-                                <FlatList
-                                    data={annonces}
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity onPress={() => handleAnnoncePress(item)} style={styles.cardWrapper}>
-                                            <Card
-                                                imageSource={{ uri: `data:image/png;base64,${item.photos[0]}` }}
-                                                title={item.objet || 'Titre indisponible'}
-                                                description={item.description || 'Pas de description'}
-                                                price={["Achat", "Location"].includes(item.transactionType) ? `${item.prix}€` : "Troc"}
-                                                date={item.dateAjout
-                                                    ? new Date(item.dateAjout).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                                                    : 'Date inconnue'
-                                                }
-                                                tempsLocation={item.transactionType === "Location" ? item.locationDuration : null }
-                                            />
-                                        </TouchableOpacity>
-                                    )}
-                                    keyExtractor={(item) => item.id}
-
                                     numColumns={5}
                                     showsHorizontalScrollIndicator={false}
                                     contentContainerStyle={styles.carrousel}
@@ -345,14 +262,12 @@ export default function App() {
                         </View>
                     )}
                 </View>
-                {isWeb && (
-                    <Footer />
-                )}
+    
+                {isWeb && <Footer />}
             </ScrollView>
-
         </View>
     );
-}
+}    
 
 const styles = StyleSheet.create({
     container: {
@@ -478,5 +393,18 @@ const styles = StyleSheet.create({
         flex: 1,
         margin: 10, // Ajout d'espace entre les cartes
         width: '100%',
+    },
+    likedButton: {
+        backgroundColor: '#ff4757',
+        paddingVertical: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginVertical: 15,
+        marginHorizontal: 20,
+    },
+    likedButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
     },
 });
